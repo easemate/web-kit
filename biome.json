@@ -1,0 +1,92 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/schema.json",
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 120
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "recommended": true,
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "identifierOrder": "natural",
+            "groups": [
+              ["@easemate/*"],
+              ":BLANK_LINE:",
+              ["@/*"],
+              ":BLANK_LINE:",
+              ["@style/*"],
+              ":BLANK_LINE:",
+              ["~/*"],
+              ":BLANK_LINE:",
+              {
+                "type": true
+              },
+              ":BLANK_LINE:",
+              {
+                "source": [":NODE:", ":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"]
+              },
+              ":BLANK_LINE:",
+              {
+                "source": ":PATH:"
+              },
+              ":BLANK_LINE:",
+              {
+                "source": [":ALIAS:", ":URL:"]
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "useArrowFunction": "error"
+      },
+      "style": {
+        "useBlockStatements": "error",
+        "useConsistentCurlyBraces": "warn"
+      },
+      "nursery": {
+        "useConsistentArrowReturn": {
+          "level": "warn",
+          "options": {
+            "style": "asNeeded",
+            "requireForObjectLiteral": true
+          }
+        }
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "arrowParentheses": "always",
+      "operatorLinebreak": "after",
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "single",
+      "trailingCommas": "none"
+    }
+  },
+  "css": {
+    "formatter": {
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "quoteStyle": "single",
+      "lineEnding": "lf",
+      "lineWidth": 120
+    }
+  },
+  "files": {
+    "includes": ["packages/**", "apps/**/*.ts", "apps/**/*.css", "turbo.json"]
+  }
+}

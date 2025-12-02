@@ -1,0 +1,56 @@
+{
+  "name": "@easemate/web-kit",
+  "version": "0.1.0",
+  "description": "Web components for easemate",
+  "type": "module",
+  "files": [
+    "build"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rm -rf build",
+    "build": "npm run clean && zshy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check src test",
+    "lint:fix": "biome check src test --write",
+    "format": "biome format src test",
+    "format:fix": "biome format src test --write",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "dev": "zshy --watch",
+    "prepare": "zshy"
+  },
+  "keywords": [
+    "ui",
+    "web-components",
+    "typescript"
+  ],
+  "author": "Aaron Iker",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/easemate/web-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/easemate/web-kit/issues"
+  },
+  "homepage": "https://github.com/easemate/web-kit#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "zshy": {
+    "exports": {
+      ".": "./src/index.ts"
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./build/index.d.cts",
+      "import": "./build/index.js",
+      "require": "./build/index.cjs"
+    }
+  },
+  "main": "./build/index.cjs",
+  "types": "./build/index.d.cts",
+  "module": "./build/index.js"
+}

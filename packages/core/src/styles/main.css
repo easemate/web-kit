@@ -1,0 +1,17 @@
+@import url('./vars.css');
+@import url('./reset.css');
+
+html,
+body {
+  background-color: var(--color-gray-900);
+}
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: 'wdth' 100;
+  min-height: 100dvh;
+  color: var(--color-gray-600);
+}

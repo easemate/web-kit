@@ -3,25 +3,19 @@ import { html } from 'lit-html';
 import { Component } from '~/decorators/Component';
 import { Prop } from '~/decorators/Prop';
 
-/** Logo loader states */
 type LogoLoaderState = 'idle' | 'intro' | 'loop' | 'exit';
 
-/** Intro animation variants */
 export type LogoIntroVariant = 'wave' | 'particle';
 
-/** Dot data with center coordinates */
 interface DotData {
   id: string;
   cx: number;
   cy: number;
 }
 
-/** Center of the SVG viewBox */
 const CENTER = { x: 74, y: 74 };
 
-/** All dots data with center coordinates (148x148 viewBox) */
 const DOTS_DATA: DotData[] = [
-  // Outer dots
   { id: 'dot-1', cx: 7.22725, cy: 73.99975 },
   { id: 'dot-2', cx: 8.0, cy: 107.63685 },
   { id: 'dot-3', cx: 41.36365, cy: 7.72734 },
@@ -36,14 +30,12 @@ const DOTS_DATA: DotData[] = [
   { id: 'dot-12', cx: 141.27285, cy: 40.86385 },
   { id: 'dot-13', cx: 140.77225, cy: 73.99975 },
   { id: 'dot-14', cx: 141.27285, cy: 107.63685 },
-  // Inner dots (large)
   { id: 'dot-15', cx: 40.36165, cy: 73.99925 },
   { id: 'dot-16', cx: 74.00125, cy: 40.36345 },
   { id: 'dot-17', cx: 74.00125, cy: 73.99925 },
   { id: 'dot-18', cx: 74.00125, cy: 107.63585 },
   { id: 'dot-19', cx: 107.63485, cy: 40.36345 },
   { id: 'dot-20', cx: 107.63485, cy: 107.63585 },
-  // Corner small dots
   { id: 'dot-21', cx: 141.77, cy: 8.23 },
   { id: 'dot-22', cx: 141.77, cy: 140.77 },
   { id: 'dot-23', cx: 7.73019, cy: 140.77 },
@@ -51,28 +43,22 @@ const DOTS_DATA: DotData[] = [
   { id: 'dot-25', cx: 7.73518, cy: 40.865 }
 ];
 
-/** Inner/large dot IDs (in animation order) */
 const INNER_DOT_IDS = ['dot-19', 'dot-20', 'dot-18', 'dot-15', 'dot-17', 'dot-16'];
 
-/** Outer dot IDs (all except inner) */
 const OUTER_DOT_IDS = DOTS_DATA.map((d) => d.id).filter((id) => !INNER_DOT_IDS.includes(id));
 
-/** Force reflow on an element */
 const forceReflow = (el: Element): void => {
   void window.getComputedStyle(el).opacity;
 };
 
-/** Get angle from center */
 const getAngle = (dot: DotData): number => Math.atan2(dot.cy - CENTER.y, dot.cx - CENTER.x);
 
-/** Sort dots by angle for circular wave effects */
 const sortByAngle = (ids: string[]): DotData[] =>
   ids
     .map((id) => DOTS_DATA.find((d) => d.id === id))
     .filter((dot): dot is DotData => dot != null)
     .sort((a, b) => getAngle(a) - getAngle(b));
 
-/** Animation durations */
 const LOOP_DURATION = 1500;
 const ROTATION_DURATION = 600;
 
@@ -85,7 +71,6 @@ const ROTATION_DURATION = 600;
       --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
       --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
       
-      /* Dot colors using theme tokens - fallback to defaults */
       --dot-dark: var(--color-gray-0, oklab(98.81% 0 0));
       --dot-medium: var(--color-gray-600, oklab(65.21% -0.0019 -0.0144));
       --dot-light: var(--color-gray-700, oklab(37.92% -0.0006 -0.0179));
@@ -708,7 +693,7 @@ export class LogoLoader extends HTMLElement {
     const orderedInnerDots = sortByAngle(INNER_DOT_IDS);
     let seedDelay = 0;
 
-    orderedInnerDots.forEach((dot, index) => {
+    orderedInnerDots.forEach((dot) => {
       this.#setTimeout(() => {
         const el = this.#getDot(dot.id);
         if (!el) {
@@ -717,22 +702,18 @@ export class LogoLoader extends HTMLElement {
 
         const targetScale = 0.6;
 
-        // Transition to initial loading state
         el.style.transition = 'all 450ms cubic-bezier(0.4, 0, 0.2, 1)';
         el.style.transform = `scale(${targetScale})`;
         el.style.fill = 'var(--dot-medium)';
         el.style.opacity = '0.7';
 
-        // Setup for dynamic animation
         el.style.setProperty('--base-scale', `${targetScale}`);
 
-        // Staggered start based on angle
         const angle = getAngle(dot);
         const normalizedAngle = (angle + Math.PI) / (2 * Math.PI);
         const animationDelayMs = normalizedAngle * LOOP_DURATION;
         el.style.setProperty('--delay', `${animationDelayMs}ms`);
 
-        // Add animation class after transition starts
         this.#setTimeout(() => {
           el.classList.add('dot-loading-inner');
         }, 100);
@@ -741,7 +722,6 @@ export class LogoLoader extends HTMLElement {
       seedDelay += 60;
     });
 
-    // Outer dots - add animation after inner dots start
     const orderedOuterDots = sortByAngle(OUTER_DOT_IDS);
     this.#setTimeout(() => {
       orderedOuterDots.forEach((dot) => {
@@ -773,14 +753,12 @@ export class LogoLoader extends HTMLElement {
     const now = performance.now();
     const elapsed = Math.max(0, now - this.#loopStartTime);
 
-    // Wait for current cycle to complete
     const timeInCycle = elapsed % LOOP_DURATION;
     const timeLeft = LOOP_DURATION - timeInCycle + 50;
 
     this.state = 'exit';
 
     this.#setTimeout(() => {
-      // Restore all dots
       const orderedAllDots = sortByAngle(DOTS_DATA.map((d) => d.id));
 
       orderedAllDots.forEach((dot, i) => {
@@ -792,12 +770,10 @@ export class LogoLoader extends HTMLElement {
         const delay = i * 18;
 
         this.#setTimeout(() => {
-          // Stop animations
           el.classList.remove('dot-loading', 'dot-loading-inner');
           el.style.removeProperty('--delay');
           el.style.removeProperty('--base-scale');
 
-          // Restore appearance
           el.classList.add('restoring');
           el.style.transform = 'scale(1)';
           el.style.opacity = '1';
@@ -809,7 +785,6 @@ export class LogoLoader extends HTMLElement {
         }, delay);
       });
 
-      // Transition to idle
       this.#setTimeout(
         () => {
           this.state = 'idle';
@@ -820,7 +795,6 @@ export class LogoLoader extends HTMLElement {
   }
 
   handleLoadingChange(next: boolean): void {
-    // Don't interrupt intro animation - it will handle loading state when complete
     if (!this.#introCompleted) {
       return;
     }
@@ -829,7 +803,6 @@ export class LogoLoader extends HTMLElement {
 
     if (next) {
       if (this.state === 'idle' || this.state === 'exit') {
-        // Clear state before starting
         this.#resetDotsState(true, true);
         this.#startLoopAnimation();
       }
@@ -842,7 +815,6 @@ export class LogoLoader extends HTMLElement {
     }
   }
 
-  /** Public method to replay intro animation */
   playIntro(variant?: LogoIntroVariant): void {
     this.#clearTimers();
     this.#resetDotsState(true);

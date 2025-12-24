@@ -636,10 +636,6 @@ export class State extends HTMLElement {
     this.#attach();
   }
 
-  #nextFrame(): Promise<void> {
-    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-  }
-
   #wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -647,7 +643,6 @@ export class State extends HTMLElement {
   #syncTabs(): void {
     const tabs: { id: string; label: string }[] = [];
 
-    // Look for slots with tab-* pattern
     for (const child of Array.from(this.children)) {
       const slot = child.getAttribute('slot');
       if (slot?.startsWith('tab-')) {
@@ -657,10 +652,8 @@ export class State extends HTMLElement {
       }
     }
 
-    // Limit to 3 tabs
     this.#tabs = tabs.slice(0, 3);
 
-    // Ensure activeTab is within bounds
     if (this.activeTab >= this.#tabs.length && this.#tabs.length > 0) {
       this.activeTab = 0;
     }
@@ -687,13 +680,11 @@ export class State extends HTMLElement {
   }
 
   #handleControlEvent(event: Event | CustomEvent<ControlEventDetail>): void {
-    // Try to get name from custom event detail first
     if ('detail' in event && event.detail?.name) {
       this.#updateState(event.detail.name, event.detail.value, event);
       return;
     }
 
-    // Fall back to reading from element
     if (!(event.target instanceof Element)) {
       return;
     }
@@ -718,13 +709,11 @@ export class State extends HTMLElement {
   #attach(): void {
     const slots: HTMLSlotElement[] = [];
 
-    // Get entry slot if no tabs
     if (this.#tabs.length === 0) {
       if (this.entrySlot) {
         slots.push(this.entrySlot);
       }
     } else {
-      // Get the active tab's slot
       const activeTab = this.#tabs[this.activeTab];
       if (activeTab) {
         const tabSlot = this.shadowRoot?.querySelector(`slot[name="tab-${activeTab.id}"]`) as HTMLSlotElement | null;
@@ -734,7 +723,6 @@ export class State extends HTMLElement {
       }
     }
 
-    // Find all controls with names (recursively search in containers)
     const findControls = (el: Element): ControlElement[] => {
       const controls: ControlElement[] = [];
       const name = getControlName(el as ControlElement);
@@ -743,7 +731,6 @@ export class State extends HTMLElement {
         controls.push(el as ControlElement);
       }
 
-      // Search in shadow DOM
       if (el.shadowRoot) {
         for (const child of el.shadowRoot.querySelectorAll('[name]')) {
           const childName = getControlName(child as ControlElement);
@@ -753,7 +740,6 @@ export class State extends HTMLElement {
         }
       }
 
-      // Search in light DOM children
       for (const child of el.querySelectorAll('[name]')) {
         const childName = getControlName(child as ControlElement);
         if (childName) {
@@ -784,7 +770,6 @@ export class State extends HTMLElement {
       }
     }
 
-    // Set initial value to first control's value for backwards compatibility
     const first = this.#controls.values().next().value;
     if (first) {
       const name = getControlName(first);
@@ -804,10 +789,8 @@ export class State extends HTMLElement {
 
     this.#state[name] = value;
 
-    // Update legacy value prop for backwards compatibility
     this.value = String(value);
 
-    // Notify subscribers
     for (const cb of this.#subscribers.get(name) ?? []) {
       cb(value, name);
     }
@@ -815,7 +798,6 @@ export class State extends HTMLElement {
       cb(value, name);
     }
 
-    // Dispatch state-change event
     dispatchControlEvent(this, 'state-change', {
       name,
       value,

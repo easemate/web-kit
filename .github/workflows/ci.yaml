@@ -1,0 +1,30 @@
+name: Build, Lint, Test
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install dependencies
+        run: npm install
+      - name: Format code
+        run: npx biome check --write .
+      - name: Lint packages
+        run: npm run lint
+      - name: Build packages
+        run: npm run build:packages
+      - name: Build playground
+        run: npm run build:playground
+      - name: Run tests
+        run: npm test

@@ -1,10 +1,5 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html, type SVGTemplateResult, svg } from 'lit-html';
 
-import { type ControlEventDetail, dispatchControlEvent } from '../shared';
 import {
   BEZIER_CONTROL_MAX_Y,
   BEZIER_CONTROL_MIN_Y,
@@ -31,12 +26,18 @@ import {
   cloneLinearPoint,
   cubicBezierPath,
   ensureLinearPointId,
+  getLinearApproximation,
   linearDisplayPath,
   MIN_LINEAR_DELTA,
   normalizeLinearPoints,
   normalizeVector,
   vectorLength
 } from './utils';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
+import { type ControlEventDetail, dispatchControlEvent } from '~/elements/shared';
 
 type CurveHost = HTMLElement & {
   points: CubicBezierPoints | LinearPoints;
@@ -100,6 +101,12 @@ export class CurveCanvas extends HTMLElement {
   @Prop<number | null>({ type: Number, reflect: false, defaultValue: null })
   accessor focusedLinearIndex: number | null = null;
 
+  @Prop<number>({ type: Number, reflect: true, defaultValue: 0 })
+  accessor simplify: number = 0;
+
+  @Prop<number>({ type: Number, reflect: true, defaultValue: 5 })
+  accessor round: number = 5;
+
   @Query<SVGSVGElement>('svg')
   accessor svgElement!: SVGSVGElement | null;
 
@@ -137,55 +144,46 @@ export class CurveCanvas extends HTMLElement {
 
       const elements: SVGTemplateResult[] = [];
 
-      elements.push(svg`<line
-        class="control-line"
-        x1="${anchorStart.x}"
-        y1="${anchorStart.y}"
-        x2="${controlOne.x}"
-        y2="${controlOne.y}"
+      const handlePathOne = this.#createHandlePath(anchorStart, controlOne);
+      const handlePathTwo = this.#createHandlePath(anchorEnd, controlTwo);
+
+      elements.push(svg`<circle
+        class="hit-area-point"
+        cx="${controlOne.x}"
+        cy="${controlOne.y}"
+        r="${HIT_AREA_RADIUS}"
+        data-index="0"
+        data-role="point"
       />`);
-      elements.push(svg`<line
-        class="control-line"
-        x1="${anchorEnd.x}"
-        y1="${anchorEnd.y}"
-        x2="${controlTwo.x}"
-        y2="${controlTwo.y}"
+      elements.push(svg`<circle
+        class="hit-area-point"
+        cx="${controlTwo.x}"
+        cy="${controlTwo.y}"
+        r="${HIT_AREA_RADIUS}"
+        data-index="1"
+        data-role="point"
       />`);
+
+      if (handlePathOne) {
+        elements.push(svg`<path
+          class="control-point ${this.#dragIndex === 0 && this.#dragMode === 'point' ? 'selected' : ''}"
+          d="${handlePathOne}"
+          data-index="0"
+          data-role="point"
+        />`);
+      }
+
+      if (handlePathTwo) {
+        elements.push(svg`<path
+          class="control-point ${this.#dragIndex === 1 && this.#dragMode === 'point' ? 'selected' : ''}"
+          d="${handlePathTwo}"
+          data-index="1"
+          data-role="point"
+        />`);
+      }
 
       elements.push(svg`<circle class="anchor-point-start" cx="${anchorStart.x}" cy="${anchorStart.y}" />`);
       elements.push(svg`<circle class="anchor-point-start" cx="${anchorEnd.x}" cy="${anchorEnd.y}" />`);
-
-      elements.push(svg`<circle
-        class="hit-area-point"
-        cx="${controlOne.x}"
-        cy="${controlOne.y}"
-        r="${HIT_AREA_RADIUS}"
-        data-index="0"
-        data-role="point"
-      />`);
-      elements.push(svg`<circle
-        class="hit-area-point"
-        cx="${controlTwo.x}"
-        cy="${controlTwo.y}"
-        r="${HIT_AREA_RADIUS}"
-        data-index="1"
-        data-role="point"
-      />`);
-
-      elements.push(svg`<circle
-        class="control-point ${this.#dragIndex === 0 && this.#dragMode === 'point' ? 'selected' : ''}"
-        cx="${controlOne.x}"
-        cy="${controlOne.y}"
-        data-index="0"
-        data-role="point"
-      />`);
-      elements.push(svg`<circle
-        class="control-point ${this.#dragIndex === 1 && this.#dragMode === 'point' ? 'selected' : ''}"
-        cx="${controlTwo.x}"
-        cy="${controlTwo.y}"
-        data-index="1"
-        data-role="point"
-      />`);
 
       return elements;
     } catch (error) {
@@ -287,13 +285,11 @@ export class CurveCanvas extends HTMLElement {
 
     const isHandleActive = this.#dragMode === dragMode && this.#dragIndex === index;
 
-    elements.push(svg`<line
-        class="linear-handle-line"
-        x1="${anchorSvg.x}"
-        y1="${anchorSvg.y}"
-        x2="${handleSvg.x}"
-        y2="${handleSvg.y}"
-    />`);
+    const handlePath = this.#createHandlePath(anchorSvg, handleSvg);
+
+    if (!handlePath) {
+      return;
+    }
 
     elements.push(svg`<circle
         class="hit-area-handle"
@@ -304,10 +300,9 @@ export class CurveCanvas extends HTMLElement {
         data-role="${role}"
     />`);
 
-    elements.push(svg`<circle
+    elements.push(svg`<path
         class="linear-handle ${isHandleActive ? 'selected' : ''}"
-        cx="${handleSvg.x}"
-        cy="${handleSvg.y}"
+        d="${handlePath}"
         data-index="${index}"
         data-role="${role}"
         title="Handle ${direction}: ${Math.round(handlePos.x * 100)}%, ${Math.round(handlePos.y * 100)}%"
@@ -331,6 +326,14 @@ export class CurveCanvas extends HTMLElement {
 
       if (!points || points.length < 2) {
         return '';
+      }
+
+      if (this.simplify > 0) {
+        const approxPoints = getLinearApproximation(points, {
+          simplify: this.simplify,
+          round: this.round
+        });
+        return linearDisplayPath(approxPoints as LinearPoints);
       }
 
       return linearDisplayPath(points);
@@ -393,22 +396,15 @@ export class CurveCanvas extends HTMLElement {
         x: point.x + (point.cpInX ?? 0),
         y: point.y + (point.cpInY ?? 0)
       });
-      elements.push(
-        svg`<line
-          class="linear-handle-line linear-handle-line--preview"
-          x1="${anchor.x}"
-          y1="${anchor.y}"
-          x2="${handlePoint.x}"
-          y2="${handlePoint.y}"
-        />`
-      );
-      elements.push(
-        svg`<circle
-          class="linear-handle linear-handle--preview"
-          cx="${handlePoint.x}"
-          cy="${handlePoint.y}"
-        />`
-      );
+      const handlePath = this.#createHandlePath(anchor, handlePoint);
+      if (handlePath) {
+        elements.push(
+          svg`<path
+            class="linear-handle linear-handle--preview"
+            d="${handlePath}"
+          />`
+        );
+      }
     }
 
     if (point.cpOutX !== undefined || point.cpOutY !== undefined) {
@@ -416,27 +412,84 @@ export class CurveCanvas extends HTMLElement {
         x: point.x + (point.cpOutX ?? 0),
         y: point.y + (point.cpOutY ?? 0)
       });
-      elements.push(
-        svg`<line
-          class="linear-handle-line linear-handle-line--preview"
-          x1="${anchor.x}"
-          y1="${anchor.y}"
-          x2="${handlePoint.x}"
-          y2="${handlePoint.y}"
-        />`
-      );
-      elements.push(
-        svg`<circle
-          class="linear-handle linear-handle--preview"
-          cx="${handlePoint.x}"
-          cy="${handlePoint.y}"
-        />`
-      );
+      const handlePath = this.#createHandlePath(anchor, handlePoint);
+      if (handlePath) {
+        elements.push(
+          svg`<path
+            class="linear-handle linear-handle--preview"
+            d="${handlePath}"
+          />`
+        );
+      }
     }
 
     elements.push(svg`<circle class="linear-point linear-point--preview" cx="${anchor.x}" cy="${anchor.y}" />`);
 
     return svg`<g class="linear-preview-group" pointer-events="none">${elements}</g>`;
+  }
+
+  #createHandlePath(anchorSvg: Point, handleSvg: Point): string | null {
+    const vecX = handleSvg.x - anchorSvg.x;
+    const vecY = handleSvg.y - anchorSvg.y;
+    const length = Math.sqrt(vecX * vecX + vecY * vecY);
+
+    const circleRadius = 4.5;
+    const barHalfHeight = 0.66;
+
+    if (length < circleRadius + 2) {
+      return null;
+    }
+
+    const dirX = vecX / length;
+    const dirY = vecY / length;
+    const perpX = -dirY;
+    const perpY = dirX;
+
+    const cx = handleSvg.x;
+    const cy = handleSvg.y;
+
+    const transitionZone = Math.min(8, (length - circleRadius) * 0.5);
+
+    const barEndDist = length - circleRadius - transitionZone;
+
+    const barTopStartX = anchorSvg.x + perpX * barHalfHeight;
+    const barTopStartY = anchorSvg.y + perpY * barHalfHeight;
+    const barBottomStartX = anchorSvg.x - perpX * barHalfHeight;
+    const barBottomStartY = anchorSvg.y - perpY * barHalfHeight;
+
+    const barTopEndX = anchorSvg.x + dirX * barEndDist + perpX * barHalfHeight;
+    const barTopEndY = anchorSvg.y + dirY * barEndDist + perpY * barHalfHeight;
+    const barBottomEndX = anchorSvg.x + dirX * barEndDist - perpX * barHalfHeight;
+    const barBottomEndY = anchorSvg.y + dirY * barEndDist - perpY * barHalfHeight;
+
+    const circleTopX = cx + perpX * circleRadius;
+    const circleTopY = cy + perpY * circleRadius;
+    const circleBottomX = cx - perpX * circleRadius;
+    const circleBottomY = cy - perpY * circleRadius;
+
+    const ctrl1Dist = transitionZone * 0.35;
+    const ctrl2Dist = transitionZone * 0.65;
+
+    const ctrl1TopX = barTopEndX + dirX * ctrl1Dist;
+    const ctrl1TopY = barTopEndY + dirY * ctrl1Dist;
+    const ctrl2TopX = circleTopX - dirX * ctrl2Dist;
+    const ctrl2TopY = circleTopY - dirY * ctrl2Dist;
+
+    const ctrl1BottomX = barBottomEndX + dirX * ctrl1Dist;
+    const ctrl1BottomY = barBottomEndY + dirY * ctrl1Dist;
+    const ctrl2BottomX = circleBottomX - dirX * ctrl2Dist;
+    const ctrl2BottomY = circleBottomY - dirY * ctrl2Dist;
+
+    return `
+      M ${circleBottomX} ${circleBottomY}
+      C ${ctrl2BottomX} ${ctrl2BottomY} ${ctrl1BottomX} ${ctrl1BottomY} ${barBottomEndX} ${barBottomEndY}
+      L ${barBottomStartX} ${barBottomStartY}
+      A ${barHalfHeight} ${barHalfHeight} 0 0 0 ${barTopStartX} ${barTopStartY}
+      L ${barTopEndX} ${barTopEndY}
+      C ${ctrl1TopX} ${ctrl1TopY} ${ctrl2TopX} ${ctrl2TopY} ${circleTopX} ${circleTopY}
+      A ${circleRadius} ${circleRadius} 0 1 0 ${circleBottomX} ${circleBottomY}
+      Z
+    `;
   }
 
   #getCubicBezierPoints = (): CubicBezierPoints | null => {
@@ -618,12 +671,6 @@ export class CurveCanvas extends HTMLElement {
   };
 
   #constrainLinearPoint = (index: number, position: Point, points: LinearPoints): LinearPoint => {
-    const previousPoint = index > 0 ? points[index - 1] : undefined;
-    const nextPoint = index < points.length - 1 ? points[index + 1] : undefined;
-
-    const minimumX = previousPoint ? previousPoint.x + MIN_LINEAR_DELTA : 0;
-    const maximumX = nextPoint ? nextPoint.x - MIN_LINEAR_DELTA : 1;
-
     let x = position.x;
 
     if (index === 0) {
@@ -631,10 +678,10 @@ export class CurveCanvas extends HTMLElement {
     } else if (index === points.length - 1) {
       x = 1;
     } else {
-      x = Math.min(Math.max(x, minimumX), maximumX);
+      x = Math.min(Math.max(x, MIN_LINEAR_DELTA), 1 - MIN_LINEAR_DELTA);
     }
 
-    const clamped = clampPoint({ x, y: position.y });
+    const clamped = clampPoint({ x, y: position.y }, { minY: -2, maxY: 3 });
     const sourcePoint = points[index];
 
     return {
@@ -1255,7 +1302,8 @@ export class CurveCanvas extends HTMLElement {
       return null;
     }
 
-    const clamped = clampPoint(position);
+    // Allow Y values outside [0, 1] for bounce/elastic effects
+    const clamped = clampPoint(position, { minY: -2, maxY: 3 });
     if (!this.#isPointNearLinearPath(clamped, points)) {
       return null;
     }

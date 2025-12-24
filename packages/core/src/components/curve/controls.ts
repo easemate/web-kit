@@ -1,9 +1,5 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-
 import { html, type TemplateResult } from 'lit-html';
 
-import { type ControlEventDetail, dispatchControlEvent } from '../shared';
 import { DEFAULT_HANDLE_LENGTH, EASING_PRESETS } from './constants';
 import { controlsStyles } from './styles';
 import {
@@ -21,12 +17,17 @@ import {
   normalizeVector,
   parseCubicBezierValue,
   parseLinearTimingFunction,
+  smoothLinearPoints,
   vectorLength
 } from './utils';
 
-import '../icons/interface/minus';
-import '../icons/interface/plus';
-import '../button';
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+import { type ControlEventDetail, dispatchControlEvent } from '~/elements/shared';
+
+import '~/elements/icons/interface/minus';
+import '~/elements/icons/interface/plus';
+import '~/elements/button';
 
 type CurveHost = HTMLElement & {
   easingType: EasingType;
@@ -58,11 +59,10 @@ type HostEventType = keyof typeof HOST_HANDLER_MAP;
   tag: 'ease-curve-controls',
   styles: controlsStyles,
   template(this: CurveControls) {
-    const isGridAtMinimum = this.gridSize <= 1;
-    const isGridAtMaximum = this.gridSize >= 24;
     return html`
       <ease-field label="Easing">
         <ease-dropdown
+          part="easing-type-dropdown"
           placeholder="Select"
           id="demo-easing-type"
           name="demo-easing-type"
@@ -85,91 +85,11 @@ type HostEventType = keyof typeof HOST_HANDLER_MAP;
       </ease-field>
 
       <ease-field label="Type">
-        <ease-radio-group .value=${this.easingType} @change=${this.handleTypeChange}>
-          <ease-button slot="content" value=${EasingType.CUBIC_BEZIER} pill>Cubic</ease-button>
-          <ease-button slot="content" value=${EasingType.LINEAR} pill>Linear</ease-button>
+        <ease-radio-group .value=${this.easingType} @change=${this.handleTypeChange} part="radio-group">
+          <button slot="content" value=${EasingType.CUBIC_BEZIER}>Cubic</button>
+          <button slot="content" value=${EasingType.LINEAR}>Linear</button>
         </ease-radio-group>
       </ease-field>
-
-      <div class="control-group">
-        <div class="grid-size-controls">
-          <ease-button
-            class="grid-size-button minus"
-            type="button"
-            block="icon"
-            pill="true"
-            variant="headless"
-            @click=${this.decrementGridSize}
-            ?disabled=${isGridAtMinimum}
-          >
-            <ease-icon-minus></ease-icon-minus>
-          </ease-button>
-          <div class="grid-size-value">
-            ${this.gridSize}x
-          </div>
-          <ease-button
-            class="grid-size-button plus"
-            type="button"
-            block="icon"
-            pill="true"
-            variant="headless"
-            @click=${this.incrementGridSize}
-            ?disabled=${isGridAtMaximum}
-          >
-            <ease-icon-plus></ease-icon-plus>
-          </ease-button>
-        </div>
-      </div>
-
-      <!-- <div class="control-group">
-        <button class="control-button" @click=${this.resetCurve}>Reset</button>
-        ${
-          this.easingType === EasingType.LINEAR && Array.isArray(this.points) && this.points.length > MIN_LINEAR_POINTS
-            ? html`<button class="control-button" @click=${this.distributeLinearPoints}>Distribute X</button>`
-            : null
-        }
-      </div> -->
-
-      <!-- ${
-        this.easingType === EasingType.LINEAR
-          ? html`
-              <div class="control-group">
-                <button
-                  class="control-button add-point-button"
-                  @click=${this.addLinearPoint}
-                  ?disabled=${this.maxPointsReached}
-                >
-                  Add Point
-                </button>
-                <button
-                  class="control-button remove-point-button"
-                  @click=${this.removeLinearPoint}
-                  ?disabled=${this.minPointsReached}
-                >
-                  Remove Point
-                </button>
-              </div>
-              ${this.renderLinearDetailsControls()}
-            `
-          : null
-      } -->
-
-      <!-- <div class="control-group grid-controls">
-        <div class="grid-buttons">
-          <button
-            class="control-button ${this.showGrid ? 'active' : ''}"
-            @click=${this.toggleGrid}
-          >
-            ${this.showGrid ? 'Hide Grid' : 'Show Grid'}
-          </button>
-          <button
-            class="control-button ${this.snapToGrid ? 'active' : ''}"
-            @click=${this.toggleSnapToGrid}
-          >
-            ${this.snapToGrid ? 'Snap Off' : 'Snap On'}
-          </button>
-        </div>
-      </div> -->
     `;
   }
 })
@@ -1036,7 +956,9 @@ export class CurveControls extends HTMLElement {
         this.#clearActivePreset();
         return;
       }
-      this.#applyPreset(parsedLinear, EasingType.LINEAR, cssValue, originEvent);
+      // Apply smoothing to linear presets for better visual curves
+      const smoothedLinear = smoothLinearPoints(parsedLinear, 0.3);
+      this.#applyPreset(smoothedLinear, EasingType.LINEAR, cssValue, originEvent);
       return;
     }
 

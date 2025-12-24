@@ -17,26 +17,22 @@ export const canvasStyles = `
   }
 
   .grid-line {
-    stroke: var(--color-white-2);
+    stroke: var(--color-white-4);
     stroke-width: .75;
   }
 
   .curve-path {
     stroke: var(--color-blue-100);
-    stroke-width: 3.5;
+    stroke-width: 2.5;
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
     transition: stroke-width 150ms ease;
   }
 
-  .curve-path:hover {
-    stroke-width: 4;
-  }
-
   .curve-path--preview {
     stroke: var(--color-blue-800);
-    stroke-width: 1.75;
+    stroke-width: 2.5;
     stroke-dasharray: 5, 5;
     opacity: 0;
     pointer-events: none;
@@ -44,16 +40,10 @@ export const canvasStyles = `
   }
 
   .control-point {
-    fill: var(--color-blue-500);
-    stroke: var(--color-blue-700);
-    stroke-width: 1.75;
+    fill: var(--color-blue-700);
+    stroke: var(--color-blue-900);
+    stroke-width: 1.5;
     cursor: grab;
-    r: 4px;
-    transition: r .2s;
-  }
-
-  .control-point:hover {
-    r: 4.5px;
   }
 
   .control-point:active {
@@ -61,22 +51,19 @@ export const canvasStyles = `
   }
 
   .control-point.selected {
-    fill: var(--color-blue-500);
   }
 
   .anchor-point-start {
     fill: var(--color-blue-100);
-    stroke: var(--color-blue-100);
-    stroke-width: 1.75;
     pointer-events: none;
     r: 5px;
     transition: r .2s;
   }
 
   .anchor-point {
-    fill: var(--color-blue-700);
-    stroke: var(--color-blue-100);
-    stroke-width: 1.5;
+    fill: var(--color-blue-900);
+    stroke: var(--color-blue-900);
+    stroke-width: 1;
     pointer-events: none;
     r: 5px;
     transition: r .2s;
@@ -88,55 +75,46 @@ export const canvasStyles = `
 
   .control-line {
     stroke: var(--color-blue-800);
-    stroke-width: 1.75;
+    stroke-width: 3;
     pointer-events: none;
+    display: none;
   }
 
   .linear-point {
     fill: var(--color-blue-100);
-    stroke: var(--color-blue-100);
-    stroke-width: 1.75;
     cursor: grab;
-    r: 5px;
+    r: 3px;
     transition: r .2s;
   }
 
-  .linear-point:hover {
-    r: 5.5px;
-  }
-
-  .linear-point:active {
-    cursor: grabbing;
+  .hit-area-point:hover + .linear-point,
+  .linear-point:hover,
+  .linear-point:active,
+  .linear-point.selected {
+    r: 5px;
   }
 
   .linear-point.selected {
     fill: var(--color-blue-300);
-    stroke-width: 2;
+    stroke-width: 1.5;
   }
 
   .linear-handle-line {
-    stroke: var(--color-blue-700);
-    stroke-width: 1.75;
+    stroke: var(--color-blue-800);
+    stroke-width: 3;
     pointer-events: none;
     transition: opacity 150ms ease;
+    display: none;
   }
 
   .linear-handle {
-    fill: var(--color-blue-500);
-    stroke: var(--color-blue-100);
-    stroke-width: 1.75;
+    fill: var(--color-blue-700);
+    stroke: var(--color-blue-900);
+    stroke-width: 1;
     cursor: grab;
-    r: 4px;
-    transition: r .2s;
-  }
-
-  .linear-handle:hover {
-    r: 4.5px;  
   }
 
   .linear-handle.selected {
-    fill: var(--color-blue-300);
-    stroke-width: 2;
   }
 
   .linear-handle:active {
@@ -198,20 +176,19 @@ export const canvasStyles = `
 
   .linear-point--preview {
     fill: var(--color-blue-100);
-    stroke: var(--color-blue-100);
-    stroke-width: 1.75;
   }
 
   .linear-handle--preview {
     fill: var(--color-blue-700);
-    stroke: var(--color-blue-500);
-    stroke-width: 1.75;
+    stroke: var(--color-blue-900);
+    stroke-width: 1.5;
   }
 
   .linear-handle-line--preview {
-    stroke: var(--color-blue-500);
-    stroke-width: 1.75;
+    stroke: var(--color-blue-800);
+    stroke-width: 2.5;
     stroke-dasharray: 4 4;
+    display: none;
   }
 `;
 
@@ -223,67 +200,13 @@ export const controlsStyles = `
     gap: 0.75rem;
   }
 
-  .control-group {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
+  [part="radio-group"] {
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  .control-label {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-right: 0.25rem;
-  }
-
-  .toggle-group {
-    display: flex;
-    gap: 0;
-      border: 1px solid var(--color-white-6);
-    border-radius: 0.375rem;
-    overflow: hidden;
-  }
-
-  .toggle-group button {
-    border: none;
-    border-radius: 0;
-    border-right: 1px solid var(--color-white-6);
-  }
-
-  .toggle-group button:last-child {
-    border-right: none;
-  }
-
-  .toggle-group button:focus-visible {
-    z-index: 1;
-  }
-
-  .grid-size-controls {
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    display: grid;
-    grid-template-columns: 28px auto 28px;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-    transition: opacity 0.2s;
-
-    &:not(:hover) {
-      opacity: 0.25;
-    }
-  }
-
-  .grid-size-value {
-    display: flex;
-    width: 16px;
-    justify-content: center;
-    align-items: center;
-    font-feature-settings: 'tnum' on;
-    font-variant-numeric: tabular-nums;
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 14px;
-    text-align: center;
+  [part="easing-type-dropdown"] {
+    --ease-dropdown-max-height: 212px;
   }
 `;
 
@@ -311,7 +234,7 @@ export const outputStyles = `
   }
 
   .output-code {
-    font-family: 'Geist Mono', monospace;
+    font-family: var(--ease-font-mono, 'Geist Mono', monospace);
     font-size: 0.8125rem;
     line-height: 1.6;
     padding: 1rem;
@@ -417,9 +340,156 @@ export const containerStyles = `
   .curve-header {
   }
 
+  .curve-canvas-wrapper {
+    position: relative;
+    margin-top: 16px;
+  }
+
   .curve-canvas {
     background-color: var(--color-white-2);
     box-shadow: 0 0 32px 0 var(--color-white-2) inset;
     border-radius: 7px;
+  }
+
+  .curve-toolbar {
+    margin-top: 8px;
+  }
+`;
+
+export const canvasControlsStyles = `
+  :host {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  :host([hidden]) {
+    display: none;
+  }
+
+  .overlay-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    pointer-events: auto;
+  }
+
+  .overlay-button {
+    --ease-icon-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    color: var(--color-gray-600);
+    border-radius: var(--radii-md);
+    background-color: var(--color-gray-875);
+    box-shadow: inset 0 1px .25px 0 var(--color-white-4), 0 1px 2.5px 0 var(--color-black-8);
+    cursor: pointer;
+    transition: color 0.2s;
+    appearance: none;
+    border: none;
+    outline: none;
+    margin: 0;
+  }
+
+  .overlay-button:hover {
+    color: var(--color-gray-300);
+  }
+
+  .overlay-button:disabled {
+    color: var(--color-gray-700);
+    cursor: not-allowed;
+  }
+
+  .overlay-button.inactive {
+    color: var(--color-blue-100);
+  }
+`;
+
+export const toolbarStyles = `
+  :host {
+    display: block;
+    width: 100%;
+  }
+
+  .toolbar-container {
+    width: 100%;
+    display: grid;
+    gap: 8px;
+  }
+
+  .toolbar-group {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    box-sizing: border-box;
+    align-items: center;
+    padding: 6px;
+    border-radius: var(--radii-md);
+    background-color: var(--color-gray-875);
+    box-shadow: inset 0 1px .25px 0 var(--color-white-4), 0 1px 2.5px 0 var(--color-black-8);
+  }
+
+  .toolbar-button {
+    --ease-icon-size: 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px;
+    color: var(--color-gray-600);
+    background-color: transparent;
+    border: none;
+    outline: none;
+    margin: 0;
+    appearance: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .toolbar-button:hover {
+    color: var(--color-blue-100);
+  }
+
+  .toolbar-button:disabled {
+    color: var(--color-gray-700);
+    cursor: not-allowed;
+  }
+
+  .grid-size-controls {
+    display: grid;
+    grid-template-columns: 24px auto 24px;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+  }
+
+  .grid-size-controls ease-button {
+    --ease-icon-size: 14px;
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    display: flex;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .grid-size-value {
+    display: flex;
+    width: 20px;
+    justify-content: center;
+    align-items: center;
+    font-feature-settings: 'tnum' on;
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    text-align: center;
   }
 `;

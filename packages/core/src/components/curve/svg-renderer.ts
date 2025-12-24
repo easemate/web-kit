@@ -10,7 +10,6 @@ export const generateGridLines = (gridStep: number): SVGTemplateResult[] => {
   const xSteps = Math.ceil(SVG_WIDTH / gridStep);
   const ySteps = Math.ceil(SVG_HEIGHT / gridStep);
 
-  // Vertical lines
   for (let i = 0; i <= xSteps; i++) {
     const x = i * gridStep;
     if (x > SVG_WIDTH) {
@@ -28,7 +27,6 @@ export const generateGridLines = (gridStep: number): SVGTemplateResult[] => {
     `);
   }
 
-  // Horizontal lines
   for (let i = 0; i <= ySteps; i++) {
     const y = i * gridStep;
     if (y > SVG_HEIGHT) {

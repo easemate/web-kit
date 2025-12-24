@@ -106,6 +106,58 @@ export const linearDisplayPath = (points: LinearPoints): string => {
   return d;
 };
 
+const perpendicularDistance = (point: Point, lineStart: Point, lineEnd: Point): number => {
+  const dx = lineEnd.x - lineStart.x;
+  const dy = lineEnd.y - lineStart.y;
+
+  if (dx === 0 && dy === 0) {
+    return Math.sqrt((point.x - lineStart.x) ** 2 + (point.y - lineStart.y) ** 2);
+  }
+
+  const numerator = Math.abs(dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x);
+  const denominator = Math.sqrt(dx * dx + dy * dy);
+
+  return numerator / denominator;
+};
+
+const simplifyPoints = (points: Point[], epsilon: number): Point[] => {
+  if (points.length < 3) {
+    return points;
+  }
+
+  let dmax = 0;
+  let index = 0;
+  const end = points.length - 1;
+  const startPoint = points[0];
+  const endPoint = points[end];
+
+  if (!startPoint || !endPoint) {
+    return points;
+  }
+
+  for (let i = 1; i < end; i++) {
+    const point = points[i];
+    if (!point) {
+      continue;
+    }
+
+    const d = perpendicularDistance(point, startPoint, endPoint);
+    if (d > dmax) {
+      index = i;
+      dmax = d;
+    }
+  }
+
+  if (dmax > epsilon) {
+    const recResults1 = simplifyPoints(points.slice(0, index + 1), epsilon);
+    const recResults2 = simplifyPoints(points.slice(index, end + 1), epsilon);
+
+    return [...recResults1.slice(0, -1), ...recResults2];
+  }
+
+  return [startPoint, endPoint];
+};
+
 export const generateCubicBezierCSS = (
   points: CubicBezierPoints,
   name: string,
@@ -125,21 +177,16 @@ export const generateCubicBezierCSS = (
   };
 };
 
-export const generateLinearCSS = (
-  points: LinearPoints | undefined,
-  name: string,
-  variant: 'animation' | 'transition' = 'animation'
-): CSSCode => {
-  if (!Array.isArray(points) || points.length < 2) {
-    return { code: '', timingFunction: '' };
-  }
+export const getLinearApproximation = (
+  points: LinearPoints,
+  options: { simplify?: number; round?: number } = {}
+): Point[] => {
+  const { simplify = 0, round = 5 } = options;
 
   const samples: Point[] = [];
   const numSamplesPerSegment = 20;
 
-  const safePoints = points as LinearPoints;
-
-  const sortedPoints = [...safePoints].sort((a, b) => a.x - b.x);
+  const sortedPoints = [...points].sort((a, b) => a.x - b.x);
 
   for (let index = 0; index < sortedPoints.length - 1; index += 1) {
     const p1 = sortedPoints[index];
@@ -176,7 +223,7 @@ export const generateLinearCSS = (
 
   for (const sample of samples) {
     const clampedX = Math.max(0, Math.min(1, sample.x));
-    const clampedY = Math.max(0, Math.min(1, sample.y));
+    const clampedY = Math.max(-2, Math.min(3, sample.y));
 
     if (clampedX > lastX + MIN_LINEAR_DELTA) {
       normalizedSamples.push({ x: clampedX, y: clampedY });
@@ -185,13 +232,10 @@ export const generateLinearCSS = (
   }
 
   if (normalizedSamples.length < 2) {
-    const code = `
-      .${name} {
-        ${variant}-timing-function: linear(0, 1);
-      }
-    `;
-
-    return { code, timingFunction: 'linear(0, 1)' };
+    return [
+      { x: 0, y: 0 },
+      { x: 1, y: 1 }
+    ];
   }
 
   const firstPoint = sortedPoints[0];
@@ -210,7 +254,36 @@ export const generateLinearCSS = (
     }
   }
 
-  const parts = normalizedSamples.map((sample) => `${sample.y.toFixed(4)} ${(sample.x * 100).toFixed(2)}%`);
+  let finalSamples = normalizedSamples;
+  if (simplify > 0) {
+    finalSamples = simplifyPoints(normalizedSamples, simplify);
+  }
+
+  return finalSamples.map((sample) => {
+    return {
+      x: sample.x,
+      y: Number(sample.y.toFixed(round))
+    };
+  });
+};
+
+export const generateLinearCSS = (
+  points: LinearPoints | undefined,
+  name: string,
+  variant: 'animation' | 'transition' = 'animation',
+  options: { simplify?: number; round?: number } = {}
+): CSSCode => {
+  if (!Array.isArray(points) || points.length < 2) {
+    return { code: '', timingFunction: '' };
+  }
+
+  const finalSamples = getLinearApproximation(points, options);
+
+  const parts = finalSamples.map((sample) => {
+    const y = sample.y;
+    const x = Number((sample.x * 100).toFixed(2));
+    return `${y} ${x}%`;
+  });
   const timingFunction = `linear(${parts.join(', ')})`;
   const code = `
       .${name} {
@@ -316,7 +389,9 @@ export const normalizeLinearPoints = (points: LinearPoints): LinearPoints => {
       continue;
     }
 
-    point.y = Math.max(0, Math.min(1, point.y));
+    const minY = -2;
+    const maxY = 3;
+    point.y = Math.max(minY, Math.min(maxY, point.y));
 
     if ((point.cpInX ?? 0) > 0) {
       point.cpInX = 0;
@@ -325,24 +400,7 @@ export const normalizeLinearPoints = (points: LinearPoints): LinearPoints => {
       point.cpOutX = 0;
     }
 
-    const prev = normalized[index - 1];
-    const next = normalized[index + 1];
-
-    if (prev) {
-      const maxInX = prev.x - point.x;
-      if ((point.cpInX ?? 0) < maxInX) {
-        point.cpInX = maxInX;
-      }
-    }
-
-    if (next) {
-      const maxOutX = next.x - point.x;
-      if ((point.cpOutX ?? 0) > maxOutX) {
-        point.cpOutX = maxOutX;
-      }
-    }
-
-    const handleThreshold = MIN_LINEAR_DELTA;
+    const handleThreshold = 0;
     if (Math.abs(point.cpInX ?? 0) < handleThreshold && Math.abs(point.cpInY ?? 0) < handleThreshold) {
       delete point.cpInX;
       delete point.cpInY;
@@ -360,42 +418,7 @@ export const normalizeLinearPoints = (points: LinearPoints): LinearPoints => {
     }
   }
 
-  const cleanedPoints: LinearPoints = [];
-
-  const firstNormalized = normalized[0];
-  if (firstNormalized) {
-    cleanedPoints.push(firstNormalized);
-  }
-
-  for (let index = 1; index < normalized.length - 1; index += 1) {
-    const current = normalized[index];
-    if (!current) {
-      continue;
-    }
-
-    const previousCleaned = cleanedPoints[cleanedPoints.length - 1];
-    const nextNormalized = normalized[index + 1];
-
-    if (!previousCleaned || !nextNormalized) {
-      continue;
-    }
-
-    const hasGapToPrevious = current.x - previousCleaned.x > MIN_LINEAR_DELTA;
-    const hasGapToNext = nextNormalized.x - current.x > MIN_LINEAR_DELTA;
-
-    if (hasGapToPrevious && hasGapToNext) {
-      cleanedPoints.push(current);
-    }
-  }
-
-  if (normalized.length > 1) {
-    const lastNormalized = normalized[normalized.length - 1];
-    if (lastNormalized && cleanedPoints[cleanedPoints.length - 1] !== lastNormalized) {
-      cleanedPoints.push(lastNormalized);
-    }
-  }
-
-  return cleanedPoints;
+  return normalized;
 };
 
 const clamp01 = (value: number): number => {
@@ -584,4 +607,67 @@ export const normalizeVector = (dx: number, dy: number): { dx: number; dy: numbe
   }
 
   return { dx: dx / length, dy: dy / length };
+};
+
+export const smoothLinearPoints = (points: LinearPoints, tension = 0.25): LinearPoints => {
+  if (points.length < 2) {
+    return points;
+  }
+
+  return points.map((point, index) => {
+    const prev = points[index - 1];
+    const next = points[index + 1];
+
+    const smoothedPoint: LinearPoint = { ...point, isLinked: true, mirrorLength: true };
+
+    if (index === 0 && next) {
+      const dx = next.x - point.x;
+      const dy = next.y - point.y;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const handleLength = length * tension;
+
+      if (length > 0) {
+        smoothedPoint.cpOutX = (dx / length) * handleLength;
+        smoothedPoint.cpOutY = (dy / length) * handleLength;
+      }
+      return smoothedPoint;
+    }
+
+    if (index === points.length - 1 && prev) {
+      const dx = point.x - prev.x;
+      const dy = point.y - prev.y;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const handleLength = length * tension;
+
+      if (length > 0) {
+        smoothedPoint.cpInX = -(dx / length) * handleLength;
+        smoothedPoint.cpInY = -(dy / length) * handleLength;
+      }
+      return smoothedPoint;
+    }
+
+    if (prev && next) {
+      const tangentX = next.x - prev.x;
+      const tangentY = next.y - prev.y;
+      const tangentLength = Math.sqrt(tangentX * tangentX + tangentY * tangentY);
+
+      if (tangentLength > 0) {
+        const normalizedTx = tangentX / tangentLength;
+        const normalizedTy = tangentY / tangentLength;
+
+        const distToPrev = Math.sqrt((point.x - prev.x) ** 2 + (point.y - prev.y) ** 2);
+        const distToNext = Math.sqrt((next.x - point.x) ** 2 + (next.y - point.y) ** 2);
+
+        const inHandleLength = distToPrev * tension;
+        const outHandleLength = distToNext * tension;
+
+        smoothedPoint.cpInX = -normalizedTx * inHandleLength;
+        smoothedPoint.cpInY = -normalizedTy * inHandleLength;
+        smoothedPoint.cpOutX = normalizedTx * outHandleLength;
+        smoothedPoint.cpOutY = normalizedTy * outHandleLength;
+      }
+    }
+
+    return smoothedPoint;
+  });
 };

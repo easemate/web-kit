@@ -87,6 +87,7 @@
     }
   },
   "files": {
-    "includes": ["packages/**", "apps/**/*.ts", "apps/**/*.css", "turbo.json"]
+    "includes": ["packages/**/src/**", "packages/**/test/**", "apps/**/*.ts", "apps/**/*.css", "turbo.json"],
+    "ignoreUnknown": true
   }
 }

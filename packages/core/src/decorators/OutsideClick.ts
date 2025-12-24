@@ -4,7 +4,6 @@ import {
   createOutsideClickHandle,
   disconnectOutsideClickHandles,
   registerOutsideClickHandle,
-  requestOutsideClickUpdate,
   updateOutsideClickHandles
 } from '~/utils/outside-click';
 

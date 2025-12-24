@@ -7,7 +7,7 @@
  * @module
  */
 
-import type { InitWebKitOptions, WebKitController } from '~/init';
+import type { InitWebKitOptions, WebKitController } from '../init';
 
 /**
  * Options for useWebKit hook
@@ -116,7 +116,7 @@ export function useWebKit(
       }
 
       // Dynamic import to ensure this only runs on client
-      const { initWebKit } = await import('~/init');
+      const { initWebKit } = await import('../init');
 
       const controller = initWebKit(optionsRef.current);
       globalController = controller;

@@ -5,8 +5,8 @@
  * React is NOT a dependency of this package - these are interface definitions only.
  */
 
-import type { TabChangeEventDetail } from '~/elements/panel';
-import type { StateChangeEventDetail } from '~/elements/state';
+import type { TabChangeEventDetail } from '../elements/panel';
+import type { StateChangeEventDetail } from '../elements/state';
 
 /**
  * Ref type for the ease-state web component

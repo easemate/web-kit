@@ -5,7 +5,7 @@
  * For simpler use cases, consider using `initWebKit()` directly in a useEffect.
  */
 
-import type { InitWebKitOptions, WebKitController } from '~/init';
+import type { InitWebKitOptions, WebKitController } from '../init';
 
 /**
  * WebKit context value
@@ -103,7 +103,7 @@ export function createWebKitProvider(React: ReactHooksForProvider): {
       let isMounted = true;
 
       const initialize = async () => {
-        const { initWebKit } = await import('~/init');
+        const { initWebKit } = await import('../init');
         const ctrl = initWebKit(options);
 
         if (isMounted) {

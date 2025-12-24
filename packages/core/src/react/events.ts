@@ -2,9 +2,9 @@
  * React event handling utilities for @easemate/web-kit
  */
 
-import type { TabChangeEventDetail } from '~/elements/panel';
-import type { ControlEventDetail } from '~/elements/shared';
-import type { StateChangeEventDetail } from '~/elements/state';
+import type { TabChangeEventDetail } from '../elements/panel';
+import type { ControlEventDetail } from '../elements/shared';
+import type { StateChangeEventDetail } from '../elements/state';
 
 /**
  * Control change event type for React

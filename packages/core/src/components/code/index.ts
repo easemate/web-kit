@@ -1,7 +1,3 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import type { TokenType } from './utils/syntax-highlighter-types';
 
 import { html } from 'lit-html';
@@ -9,6 +5,10 @@ import { html } from 'lit-html';
 import { getHighlightAPI, SUPPORTS_HIGHLIGHT_API } from './utils/highlight-api';
 import { generateHighlightStyles } from './utils/syntax-highlighter-theme';
 import { normalizeIndent, tokenize } from './utils/syntax-tokenizer';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-code',
@@ -18,12 +18,14 @@ import { normalizeIndent, tokenize } from './utils/syntax-tokenizer';
     :host {
       display: block;
       position: relative;
-      color: var(--color-blue-100);
+      color: var(--ease-code-color, var(--color-blue-100));
     }
 
     pre {
       margin: 0;
-      font-family: 'Geist Mono', monospace;
+      font-family: var(--ease-font-mono, 'Geist Mono', monospace);
+      font-size: var(--ease-code-font-size, var(--ease-font-size-sm, 12px));
+      line-height: var(--ease-code-line-height, 1.4);
     }
 
     code {

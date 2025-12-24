@@ -11,7 +11,7 @@ A modern, framework-agnostic UI kit of web components for building animation con
 <div>
 
 [![npm version](https://img.shields.io/npm/v/@easemate/web-kit.svg?style=flat-square)](https://www.npmjs.com/package/@easemate/web-kit)
-[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@easemate/web-kit?style=flat-square&label=bundle%20size)](https://bundlephobia.com/package/@easemate/web-kit)
+![npm package minimized gzipped size](https://img.shields.io/bundlejs/size/%40easemate%2Fweb-kit?format=minzip)
 [![npm downloads](https://img.shields.io/npm/dm/@easemate/web-kit.svg?style=flat-square)](https://www.npmjs.com/package/@easemate/web-kit)
 [![license](https://img.shields.io/npm/l/@easemate/web-kit.svg?style=flat-square)](https://github.com/easemate/web-kit/blob/main/LICENSE)
 

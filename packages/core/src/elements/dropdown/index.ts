@@ -1,13 +1,15 @@
-import { Component } from '@/Component';
-import { OutsideClick, requestOutsideClickUpdate } from '@/OutsideClick';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
-import type { Placement } from '../popover';
+import type { Placement } from '~/elements/popover';
+import '../popover';
+import '../icons/animation/chevron';
 
 import { html, type TemplateResult } from 'lit-html';
 
 import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { OutsideClick, requestOutsideClickUpdate } from '~/decorators/OutsideClick';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 interface OptionRecord {
   element: HTMLElement;
@@ -46,8 +48,8 @@ const nextPanelId = (() => {
 
     ease-popover {
       --ease-popover-content-min-width: var(--ease-dropdown-panel-min-width, anchor-size(width));
-      --ease-popover-content-width: var(--ease-dropdown-panel-width, anchor-size(width));
-      --ease-popover-content-max-width: var(--ease-dropdown-panel-max-width, anchor-size(width));
+      --ease-popover-content-width: var(--ease-dropdown-panel-width, max-content);
+      --ease-popover-content-max-width: var(--ease-dropdown-panel-max-width, none);
     }
 
     [part="trigger"] {
@@ -56,28 +58,32 @@ const nextPanelId = (() => {
       justify-content: space-between;
       width: 100%;
       gap: 8px;
-      padding: 8px 8px 8px 12px;
-      border-radius: var(--radii-md);
-      background-color: var(--color-gray-850);
+      padding: var(--ease-dropdown-trigger-padding, 8px 8px 8px 12px);
+      border-radius: var(--ease-dropdown-radius, var(--radii-md));
+      background-color: var(--ease-dropdown-background, var(--color-gray-850));
       cursor: pointer;
-      box-shadow: inset 0 1px .25px 0 var(--color-white-4), 0 1px 2.5px 0 var(--color-black-8);
-      font-family: inherit;
+      box-shadow: var(
+        --ease-dropdown-shadow,
+        inset 0 1px 0.25px 0 var(--color-white-4),
+        0 1px 2.5px 0 var(--color-black-8)
+      );
+      font-family: var(--ease-font-family, inherit);
       font-optical-sizing: auto;
       box-sizing: border-box;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--color-foreground);
+      font-size: var(--ease-dropdown-font-size, var(--ease-font-size, 13px));
+      font-weight: var(--ease-dropdown-font-weight, 500);
+      color: var(--ease-dropdown-color, var(--color-foreground));
       min-width: 0;
       border: none;
       outline: none;
       margin: 0;
-      line-height: 14px;
+      line-height: var(--ease-dropdown-line-height, 14px);
       transition: color 0.2s, background-color 0.2s;
       text-align: left;
 
       &:hover,
       &:focus-within {
-        background-color: var(--color-gray-825);
+        background-color: var(--ease-dropdown-background-hover, var(--color-gray-825));
       }
 
       [part="trigger-icon"] {
@@ -128,7 +134,7 @@ const nextPanelId = (() => {
     [part="trigger"][data-placeholder="true"],
     [part="trigger"] [part="trigger-label"][data-placeholder="true"],
     input[part="trigger-input"]::placeholder {
-      color: var(--color-gray-600);
+      color: var(--ease-dropdown-placeholder-color, var(--color-gray-600));
     }
 
     [part="trigger"] [part="trigger-label"] {
@@ -139,15 +145,21 @@ const nextPanelId = (() => {
     }
 
     [part="content"] {
-      border-radius: var(--radii-md);
-      background: var(--color-gray-875);
+      border-radius: var(--ease-dropdown-panel-radius, var(--ease-dropdown-radius, var(--radii-md)));
+      background: var(--ease-dropdown-panel-background, var(--color-gray-875));
       border: none;
       outline: none;
-      box-shadow: 0 5px 20px 0 var(--color-black-15), 0 1px 4px 0 var(--color-black-15), 0 0 0 1px var(--color-white-4) inset, 0 1px 0 0 var(--color-white-4) inset;
+      box-shadow: var(
+        --ease-dropdown-panel-shadow,
+        0 5px 20px 0 var(--color-black-15),
+        0 1px 4px 0 var(--color-black-15),
+        0 0 0 1px var(--color-white-4) inset,
+        0 1px 0 0 var(--color-white-4) inset
+      );
       background-clip: padding-box;
-      border: 1px solid var(--color-gray-825);
+      border: 1px solid var(--ease-dropdown-panel-border-color, var(--color-gray-825));
       box-sizing: border-box;
-      padding: 4px;
+      padding: var(--ease-dropdown-panel-padding, 4px);
     }
     
     [part="content"] ::slotted(hr) {
@@ -164,12 +176,12 @@ const nextPanelId = (() => {
 
     [part="content"] ::slotted(h4) {
       margin: 4px 0 8px 0 !important;
-      font-size: 11px;
+      font-size: var(--ease-dropdown-group-label-font-size, 11px);
       line-height: 1;
-      padding: 0 8px;
-      font-family: inherit;
+      padding: var(--ease-dropdown-group-label-padding, 0 8px);
+      font-family: var(--ease-font-family, inherit);
       font-weight: 450;
-      color: var(--color-gray-700);
+      color: var(--ease-dropdown-group-label-color, var(--color-gray-700));
       display: block;
 
       &:first-child,
@@ -239,20 +251,20 @@ const nextPanelId = (() => {
 
     ::slotted(button[slot="content"]) {
       appearance: none;
-      font-family: inherit;
+      font-family: var(--ease-font-family, inherit);
       font-optical-sizing: auto;
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--color-blue-100);
+      font-size: var(--ease-dropdown-option-font-size, var(--ease-font-size-sm, 12px));
+      font-weight: var(--ease-dropdown-option-font-weight, 400);
+      color: var(--ease-dropdown-option-color, var(--color-blue-100));
       min-width: 0;
-      padding: 7px 8px;
+      padding: var(--ease-dropdown-option-padding, 7px 8px);
       display: block;
-      border-radius: 5px;
-      background-color: var(--color-gray-875);
+      border-radius: var(--ease-dropdown-option-radius, 5px);
+      background-color: var(--ease-dropdown-option-background, var(--color-gray-875));
       border: none;
       outline: none;
       margin: 0;
-      line-height: 14px;
+      line-height: var(--ease-dropdown-option-line-height, 14px);
       transition: color 0.2s, background-color 0.2s;
       cursor: pointer;
       width: 100%;
@@ -263,8 +275,8 @@ const nextPanelId = (() => {
     ::slotted(button[slot="content"]:focus-visible),
     ::slotted(button[slot="content"][data-active="true"]),
     ::slotted(button[slot="content"][aria-selected="true"]) {
-      background-color: var(--color-gray-825);
-      color: var(--color-white);
+      background-color: var(--ease-dropdown-option-background-active, var(--color-gray-825));
+      color: var(--ease-dropdown-option-color-active, var(--color-white));
     }
   `
 })
@@ -361,6 +373,7 @@ export class Dropdown extends HTMLElement {
 
   afterRender(): void {
     const trigger = this.trigger;
+    const ariaLabel = this.getAttribute('aria-label');
 
     if (trigger) {
       if (trigger instanceof HTMLButtonElement) {
@@ -368,10 +381,24 @@ export class Dropdown extends HTMLElement {
       }
       trigger.setAttribute('aria-expanded', this.open && !this.disabled ? 'true' : 'false');
       trigger.setAttribute('aria-haspopup', 'listbox');
+
+      if (trigger instanceof HTMLButtonElement) {
+        if (ariaLabel && ariaLabel.trim().length > 0) {
+          trigger.setAttribute('aria-label', ariaLabel.trim());
+        } else {
+          trigger.removeAttribute('aria-label');
+        }
+      }
     }
 
     if (this.searchInput) {
       this.searchInput.disabled = Boolean(this.disabled);
+
+      if (ariaLabel && ariaLabel.trim().length > 0) {
+        this.searchInput.setAttribute('aria-label', ariaLabel.trim());
+      } else {
+        this.searchInput.removeAttribute('aria-label');
+      }
     }
 
     const panel = this.panelContent;

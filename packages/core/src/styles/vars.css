@@ -1,4 +1,6 @@
-:root {
+:root,
+:where([data-ease-theme='dark']) {
+  color-scheme: dark;
   /* Gray Scale */
   --color-gray-0: oklab(98.81% 0 0);
   --color-gray-100: oklab(97.64% 0.0004 -0.0013);
@@ -91,18 +93,73 @@
   --color-white-20: oklab(95.14% -0.0013 -0.0186 / 0.2);
   --color-white-30: oklab(95.14% -0.0013 -0.0186 / 0.3);
   --color-white-40: oklab(95.14% -0.0013 -0.0186 / 0.4);
+  --color-white-50: oklab(95.14% -0.0013 -0.0186 / 0.5);
   --color-white-70: oklab(95.14% -0.0013 -0.0186 / 0.7);
   --color-white-80: oklab(95.14% -0.0013 -0.0186 / 0.8);
   --color-white-90: oklab(95.14% -0.0013 -0.0186 / 0.9);
+  --color-black-0: oklab(0% 0 0 / 0);
   --color-black-2: oklab(0% 0 0 / 0.02);
   --color-black-4: oklab(0% 0 0 / 0.04);
   --color-black-6: oklab(0% 0 0 / 0.06);
   --color-black-8: oklab(0% 0 0 / 0.08);
+  --color-black-10: oklab(0% 0 0 / 0.1);
   --color-black-12: oklab(0% 0 0 / 0.12);
   --color-black-15: oklab(0% 0 0 / 0.15);
+  --color-black-20: oklab(0% 0 0 / 0.2);
+  --color-black-30: oklab(0% 0 0 / 0.3);
+  --color-black-40: oklab(0% 0 0 / 0.4);
   --color-black-50: oklab(0% 0 0 / 0.5);
+  --color-black-70: oklab(0% 0 0 / 0.7);
+  --color-black-80: oklab(0% 0 0 / 0.8);
+  --color-black-90: oklab(0% 0 0 / 0.9);
 
   --color-foreground: var(--color-gray-0);
 
+  /* Radii */
+  --radii-sm: 4px;
   --radii-md: 8px;
+  --radii-lg: 12px;
+  --radii-xl: 16px;
+  --radii-full: 9999px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Typography */
+  --font-family: 'Instrument Sans', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-size: 13px;
+  --font-line-height: 1.5;
+
+  /* Ease UI kit tokens */
+  --ease-font-family: var(--font-family);
+  --ease-font-mono: var(--font-mono);
+  --ease-font-size: var(--font-size);
+  --ease-font-size-sm: 12px;
+  --ease-line-height: var(--font-line-height);
+
+  /* Panel (ease-state) */
+  --ease-panel-max-width: 332px;
+  --ease-panel-padding: var(--spacing-md);
+  --ease-panel-radius: var(--radii-lg);
+  --ease-panel-border-color: var(--color-white-6);
+  --ease-panel-background: var(--color-gray-1000);
+  --ease-panel-shadow: 0 0 40px 0 var(--color-white-2) inset;
+  --ease-panel-title-font-size: 14px;
+  --ease-panel-title-font-weight: 500;
+  --ease-panel-title-line-height: 24px;
+  --ease-panel-title-color: var(--color-blue-100);
+
+  /* Field (ease-field) */
+  --ease-field-label-width: 36%;
+  --ease-field-column-gap: var(--spacing-md);
+  --ease-field-row-gap: 6px;
+  --ease-field-min-height: 30px;
+  --ease-field-label-font-size: var(--ease-font-size-sm);
+  --ease-field-label-color: var(--color-gray-600);
+  --ease-field-label-padding-left: 4px;
 }

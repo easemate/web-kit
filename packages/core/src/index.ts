@@ -1,16 +1,29 @@
-// Decorators
-export * from '@/Component';
-export * from '@/Listen';
-export * from '@/OutsideClick';
-export * from '@/Prop';
-export * from '@/Query';
-export * from '@/Watch';
-
 // Components
+export * from './components';
+// Decorators
+export * from './decorators';
+// Elements (components)
 export * from './elements';
+// Init API
+export {
+  type FontConfig,
+  type FontSource,
+  type InitWebKitOptions,
+  initWebKit,
+  type LazyLoadConfig,
+  type LazyLoader,
+  type ReplaceConfig,
+  type StylePreset,
+  type StylesConfig,
+  type ThemeModeConfig,
+  type WebKitComponentTag,
+  type WebKitController,
+  type WebKitElementTag,
+  type WebKitTag
+} from './init';
 // Theming
 export * from './theme';
-// Template utilities (re-export from lit-html directives)
+// Utilities
 export {
   classMap,
   ifDefined,

@@ -1,12 +1,14 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
-import type { Placement } from '../popover';
+import type { Placement } from '~/elements/popover';
 
 import { html, type TemplateResult } from 'lit-html';
 
 import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
+import '../dropdown';
+import '../input';
 import './picker';
 
 import { isValidHex } from './utils';
@@ -32,7 +34,7 @@ import { styleMap } from '~/utils/template-helpers';
       display: block;
       width: 76px;
       cursor: pointer;
-      font-family: 'Geist Mono', monospace;
+      font-family: var(--ease-font-mono, 'Geist Mono', monospace);
 
       &::part(control) {
         margin-left: -12px;
@@ -55,11 +57,11 @@ import { styleMap } from '~/utils/template-helpers';
     }
 
     [part="value-text"] {
-      font-family: 'Geist Mono', monospace;
+      font-family: var(--ease-font-mono, 'Geist Mono', monospace);
     }
 
     ease-dropdown::part(content) {
-      padding: 12px 12px 8px 12px;
+      padding: var(--ease-color-input-dropdown-padding, 12px 12px 8px 12px);
       overflow: visible;
     }
 

@@ -1,45 +1,45 @@
 import '../input';
 
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
 
-import { coerceNumber, dispatchControlEvent, setBooleanAttribute } from '../shared';
+import { type ControlEventDetail, coerceNumber, dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-slider',
   styles: `
     :host {
       display: contents;
-      --track-color: var(--color-gray-825);
-      --active-track-color: var(--color-blue-1100);
-      --thumb-color: var(--color-blue-900);
-      --thumb-size: 18px;
-      --track-height: 4px;
+      --track-color: var(--ease-slider-track-color, var(--color-gray-825));
+      --active-track-color: var(--ease-slider-active-track-color, var(--color-blue-1100));
+      --thumb-color: var(--ease-slider-thumb-color, var(--color-blue-900));
+      --thumb-size: var(--ease-slider-thumb-size, 18px);
+      --track-height: var(--ease-slider-track-height, 4px);
     }
 
     [part="container"] {
       flex: 1;
       display: grid;
-      grid-template-columns: auto 36px;
-      grid-gap: 12px;
+      grid-template-columns: auto var(--ease-slider-value-width, 36px);
+      grid-gap: var(--ease-slider-gap, 12px);
     }
 
     ease-input[part="value"] {
       --ease-input-padding: 8px 0;
       min-width: 0;
       text-align: center;
-      width: 36px;
+      width: var(--ease-slider-value-width, 36px);
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum";
-      font-family: 'Geist Mono', monospace;
+      font-family: var(--ease-font-mono, 'Geist Mono', monospace);
     }
 
     input[part="control"][type="range"] {
-      height: 30px;
+      height: var(--ease-slider-height, 30px);
       margin: 0;
       padding: 0;
       appearance: none;
@@ -112,15 +112,31 @@ import { coerceNumber, dispatchControlEvent, setBooleanAttribute } from '../shar
   template(this: Slider) {
     return html`
       <div part="container">
-        <input part="control" type="range" />
+        <input
+          part="control"
+          type="range"
+          .min=${this.min ?? 0}
+          .max=${this.max ?? 100}
+          .step=${this.step ?? 1}
+          .value=${String(this.value ?? 0)}
+          ?disabled=${this.disabled}
+          ?aria-disabled=${this.disabled}
+        />
         
-        <ease-input part="value" type="number" placeholder='-' .value=${this.value} @input=${this.handleInput} @change=${this.handleChange} />
+        <ease-input
+          part="value"
+          type="number"
+          placeholder="-"
+          .disabled=${Boolean(this.disabled)}
+          .value=${this.value === null || this.value === undefined ? '' : String(this.value)}
+        />
       </div>
     `;
   }
 })
 export class Slider extends HTMLElement {
   declare requestRender: () => void;
+
   @Prop<number | null>({ type: Number, reflect: true })
   accessor value!: number | null;
 
@@ -139,8 +155,8 @@ export class Slider extends HTMLElement {
   @Query<HTMLInputElement>('input')
   accessor control!: HTMLInputElement | null;
 
-  @Query<HTMLOutputElement>('output')
-  accessor output!: HTMLOutputElement | null;
+  @Query<HTMLElement>('ease-input')
+  accessor valueControl!: (HTMLElement & { value?: string | null }) | null;
 
   afterRender(): void {
     if (!this.control) {
@@ -162,8 +178,8 @@ export class Slider extends HTMLElement {
     this.updateProgress();
   }
 
-  @Listen<Slider, Event, HTMLInputElement>('input', { selector: 'input' })
-  handleInput(event: Event, target?: HTMLInputElement | null): void {
+  @Listen<Slider, Event, HTMLInputElement>('input', { selector: 'input[type="range"]' })
+  handleRangeInput(event: Event, target?: HTMLInputElement | null): void {
     if (!target) {
       return;
     }
@@ -172,12 +188,60 @@ export class Slider extends HTMLElement {
     this.value = numericValue;
     this.updateProgress();
 
+    if (this.valueControl) {
+      this.valueControl.value = numericValue === null ? '' : String(numericValue);
+    }
+
     dispatchControlEvent(this, 'input', { value: this.value, event });
   }
 
-  @Listen<Slider, Event, HTMLInputElement>('change', { selector: 'input' })
-  handleChange(event: Event): void {
+  @Listen<Slider, Event, HTMLInputElement>('change', { selector: 'input[type="range"]' })
+  handleRangeChange(event: Event, target?: HTMLInputElement | null): void {
+    if (target) {
+      const numericValue = coerceNumber(target.value);
+      this.value = numericValue;
+      this.updateProgress();
+
+      if (this.valueControl) {
+        this.valueControl.value = numericValue === null ? '' : String(numericValue);
+      }
+    }
+
     dispatchControlEvent(this, 'change', { value: this.value, event });
+  }
+
+  @Listen<Slider, CustomEvent<ControlEventDetail<string>>, HTMLElement>('input', {
+    selector: 'ease-input',
+    when: (event) => event instanceof CustomEvent && typeof (event as CustomEvent).detail?.value === 'string'
+  })
+  handleValueInput(event: CustomEvent<ControlEventDetail<string>>): void {
+    const rawValue = event.detail?.value ?? '';
+    const numericValue = coerceNumber(rawValue);
+    this.value = numericValue;
+    this.updateProgress();
+
+    if (this.control) {
+      this.control.value = String(numericValue ?? 0);
+    }
+
+    dispatchControlEvent(this, 'input', { value: this.value, event: event.detail?.event ?? event });
+  }
+
+  @Listen<Slider, CustomEvent<ControlEventDetail<string>>, HTMLElement>('change', {
+    selector: 'ease-input',
+    when: (event) => event instanceof CustomEvent && typeof (event as CustomEvent).detail?.value === 'string'
+  })
+  handleValueChange(event: CustomEvent<ControlEventDetail<string>>): void {
+    const rawValue = event.detail?.value ?? '';
+    const numericValue = coerceNumber(rawValue);
+    this.value = numericValue;
+    this.updateProgress();
+
+    if (this.control) {
+      this.control.value = String(numericValue ?? 0);
+    }
+
+    dispatchControlEvent(this, 'change', { value: this.value, event: event.detail?.event ?? event });
   }
 
   updateProgress(): void {
@@ -185,10 +249,11 @@ export class Slider extends HTMLElement {
       return;
     }
 
-    const value = this.value ?? 0;
-    const min = this.min ?? 0;
-    const max = this.max ?? 100;
+    // Ensure numeric coercion for proper calculation
+    const value = Number(this.value) || 0;
+    const min = Number(this.min) || 0;
+    const max = Number(this.max) || 100;
     const percent = max === min ? 0 : ((value - min) / (max - min)) * 100;
-    this.control.style.setProperty('--progress', `${percent}%`);
+    this.control.style.setProperty('--progress', `${Math.max(0, Math.min(100, percent))}%`);
   }
 }

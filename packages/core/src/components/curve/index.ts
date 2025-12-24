@@ -1,8 +1,4 @@
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-
-import type { ControlEventDetail } from '../shared';
+import type { ControlEventDetail } from '~/elements/shared';
 
 import { html } from 'lit-html';
 
@@ -10,6 +6,10 @@ import { cubicBezierToLinearPoints } from './bezier-conversion';
 import { containerStyles } from './styles';
 import { type CubicBezierPoints, EasingType, type LinearPoints, MIN_LINEAR_POINTS } from './types';
 import { MIN_LINEAR_DELTA, normalizeLinearPoints } from './utils';
+
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
 
 @Component({
   tag: 'ease-curve',
@@ -28,24 +28,47 @@ import { MIN_LINEAR_DELTA, normalizeLinearPoints } from './utils';
           ></ease-curve-controls>
         </div>
 
-        <div class="curve-canvas">
-          <ease-curve-canvas
+        <div class="curve-canvas-wrapper">
+          <div class="curve-canvas">
+            <ease-curve-canvas
+              .easingType=${this.easingType}
+              .points=${this.points}
+              .showGrid=${this.showGrid}
+              .snapToGrid=${this.snapToGrid}
+              .gridSize=${this.gridSize}
+              .focusedLinearIndex=${this.focusedLinearIndex}
+              .simplify=${this.simplify}
+              .round=${this.round}
+            ></ease-curve-canvas>
+          </div>
+          <ease-curve-canvas-controls
+            .easingType=${this.easingType}
+            .points=${this.points}
+            .focusedLinearIndex=${this.focusedLinearIndex}
+          ></ease-curve-canvas-controls>
+        </div>
+
+        <div class="curve-toolbar">
+          <ease-curve-toolbar
             .easingType=${this.easingType}
             .points=${this.points}
             .showGrid=${this.showGrid}
             .snapToGrid=${this.snapToGrid}
             .gridSize=${this.gridSize}
-            .focusedLinearIndex=${this.focusedLinearIndex}
-          ></ease-curve-canvas>
+            .simplify=${this.simplify}
+            .round=${this.round}
+          ></ease-curve-toolbar>
         </div>
 
-        <div class="curve-footer">
+        <!-- <div class="curve-footer">
           <ease-curve-output
             .easingType=${this.easingType}
             .points=${this.points}
             .name=${this.name}
+            .simplify=${this.simplify}
+            .round=${this.round}
           ></ease-curve-output>
-        </div>
+        </div> -->
       </div>
     `;
   }
@@ -85,6 +108,12 @@ export class Curve extends HTMLElement {
 
   @Prop<number>({ type: Number, reflect: true, defaultValue: 8 })
   accessor gridSize!: number;
+
+  @Prop<number>({ type: Number, reflect: true, defaultValue: 0 })
+  accessor simplify!: number;
+
+  @Prop<number>({ type: Number, reflect: true, defaultValue: 5 })
+  accessor round!: number;
 
   @Prop<number | null>({ type: Number, reflect: false, defaultValue: null })
   accessor focusedLinearIndex: number | null = null;
@@ -164,6 +193,26 @@ export class Curve extends HTMLElement {
       return;
     }
     this.gridSize = value;
+    this.requestRender();
+  }
+
+  @Listen<Curve, CustomEvent<ControlEventDetail<number>>>('simplify-change', { target: 'light' })
+  handleSimplifyChange(event: CustomEvent<ControlEventDetail<number>>): void {
+    const { value } = event.detail;
+    if (this.simplify === value) {
+      return;
+    }
+    this.simplify = value;
+    this.requestRender();
+  }
+
+  @Listen<Curve, CustomEvent<ControlEventDetail<number>>>('round-change', { target: 'light' })
+  handleRoundChange(event: CustomEvent<ControlEventDetail<number>>): void {
+    const { value } = event.detail;
+    if (this.round === value) {
+      return;
+    }
+    this.round = value;
     this.requestRender();
   }
 
@@ -329,8 +378,10 @@ export class Curve extends HTMLElement {
 }
 
 import './canvas';
+import './canvas-controls';
 import './controls';
 import './output';
+import './toolbar';
 
 export {
   type CubicBezierPoints,

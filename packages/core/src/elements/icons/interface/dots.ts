@@ -1,6 +1,6 @@
-import { Component } from '@/Component';
-
 import { html } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
 
 @Component({
   tag: 'ease-icon-dots',
@@ -26,6 +26,6 @@ import { html } from 'lit-html';
     `;
   }
 })
-export class Dots extends HTMLElement {
+export class IconDots extends HTMLElement {
   declare requestRender: () => void;
 }

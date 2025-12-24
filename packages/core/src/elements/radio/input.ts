@@ -1,11 +1,11 @@
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
 
 import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-radio-input',
@@ -13,7 +13,7 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
   styles: `
     .radio {
       display: table;
-      border-radius: 12px;
+      border-radius: var(--ease-radio-input-radius, 12px);
       position: relative;
     }
 
@@ -38,8 +38,8 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
       margin: 0;
       padding: 0;
       border-radius: inherit;
-      width: 24px;
-      height: 24px;
+      width: var(--ease-radio-input-size, 24px);
+      height: var(--ease-radio-input-size, 24px);
     }
 
     .radio svg {
@@ -50,12 +50,12 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
       bottom: 0;
       top: 0;
       pointer-events: none;
-      fill: var(--color-blue-100);
+      fill: var(--ease-radio-input-dot-color, var(--color-blue-100));
       transform: scale(1.01) translateZ(0);
     }
 
     [part="control"] {
-      box-shadow: inset 0 0 0 2px var(--color-gray-700);
+      box-shadow: inset 0 0 0 var(--ease-radio-input-border-width, 2px) var(--ease-radio-input-border-color, var(--color-gray-700));
     }
 
     .radio svg .top {
@@ -75,7 +75,7 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
     }
 
     [part="control"]:checked {
-      box-shadow: inset 0 0 0 6.75px var(--color-blue-800);
+      box-shadow: inset 0 0 0 var(--ease-radio-input-checked-fill-size, 6.75px) var(--ease-radio-input-checked-fill, var(--color-blue-800));
     }
 
     [part="control"]:checked + svg .top {
@@ -127,13 +127,13 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
 
     @keyframes radio-border-expand {
       0% {
-        box-shadow: inset 0 0 0 2px var(--color-gray-700);
+        box-shadow: inset 0 0 0 var(--ease-radio-input-border-width, 2px) var(--ease-radio-input-border-color, var(--color-gray-700));
       }
       25% {
-        box-shadow: inset 0 0 0 12px var(--color-blue-800);
+        box-shadow: inset 0 0 0 var(--ease-radio-input-checked-fill-max, 12px) var(--ease-radio-input-checked-fill, var(--color-blue-800));
       }
       100% {
-        box-shadow: inset 0 0 0 6.75px var(--color-blue-800);
+        box-shadow: inset 0 0 0 var(--ease-radio-input-checked-fill-size, 6.75px) var(--ease-radio-input-checked-fill, var(--color-blue-800));
       }
     }
 
@@ -172,13 +172,13 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
 
     @keyframes radio-border-contract {
       0% {
-        box-shadow: inset 0 0 0 6.75px var(--color-blue-800);
+        box-shadow: inset 0 0 0 var(--ease-radio-input-checked-fill-size, 6.75px) var(--ease-radio-input-checked-fill, var(--color-blue-800));
       }
       75% {
-        box-shadow: inset 0 0 0 12px var(--color-blue-800);
+        box-shadow: inset 0 0 0 var(--ease-radio-input-checked-fill-max, 12px) var(--ease-radio-input-checked-fill, var(--color-blue-800));
       }
       100% {
-        box-shadow: inset 0 0 0 2px var(--color-gray-700);
+        box-shadow: inset 0 0 0 var(--ease-radio-input-border-width, 2px) var(--ease-radio-input-border-color, var(--color-gray-700));
       }
     }
 

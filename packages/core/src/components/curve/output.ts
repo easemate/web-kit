@@ -1,12 +1,12 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-
 import { html } from 'lit-html';
 
 import { outputStyles } from './styles';
 import { type CSSCode, type CubicBezierPoints, EasingType, type LinearPoints } from './types';
 import { generateCubicBezierCSS, generateLinearCSS } from './utils';
-import '../code';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+import '~/components/code';
 
 @Component({
   tag: 'ease-curve-output',
@@ -14,13 +14,13 @@ import '../code';
   template(this: CurveOutput) {
     return html`
       <div class="output-container">
-        <!-- <div class="output-group">
+        <div class="output-group">
           <h4 class="output-label">CSS Easing Function</h4>
           <ease-code language="css">${this.generatedCSS.code}</ease-code>
           <button class="copy-button" @click=${this.handleCopyClick}>
             ${this.copyStatus}
           </button>
-        </div> -->
+        </div>
       </div>
     `;
   }
@@ -39,6 +39,12 @@ export class CurveOutput extends HTMLElement {
 
   @Prop<'animation' | 'transition'>({ reflect: true, defaultValue: 'animation' })
   accessor variant!: 'animation' | 'transition';
+
+  @Prop<number>({ type: Number, reflect: true, defaultValue: 0 })
+  accessor simplify!: number;
+
+  @Prop<number>({ type: Number, reflect: true, defaultValue: 5 })
+  accessor round!: number;
 
   #copyTimeout: number | null = null;
   #animationTimeout: number | null = null;
@@ -67,7 +73,10 @@ export class CurveOutput extends HTMLElement {
 
     if (this.easingType === EasingType.LINEAR) {
       if (Array.isArray(this.points)) {
-        return generateLinearCSS(this.points, this.name, this.variant);
+        return generateLinearCSS(this.points, this.name, this.variant, {
+          simplify: this.simplify,
+          round: this.round
+        });
       }
 
       const timingFunction = 'linear(0, 1)';

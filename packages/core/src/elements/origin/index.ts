@@ -1,15 +1,15 @@
 import '../dropdown';
 
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import type { Dropdown } from '../dropdown';
 
 import { html } from 'lit-html';
 
 import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-origin',

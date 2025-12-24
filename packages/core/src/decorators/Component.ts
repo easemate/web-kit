@@ -208,7 +208,8 @@ export const Component =
       }
     }
 
-    if (!customElements.get(tag)) {
+    // SSR safety: only register in browser environments
+    if (typeof customElements !== 'undefined' && !customElements.get(tag)) {
       customElements.define(tag, Decorated as unknown as CustomElementConstructor);
     }
 

@@ -1,6 +1,6 @@
-import { Component } from '@/Component';
-
 import { html } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
 
 @Component({
   tag: 'ease-icon-arrows-vertical',
@@ -24,6 +24,6 @@ import { html } from 'lit-html';
     `;
   }
 })
-export class ArrowsVertical extends HTMLElement {
+export class IconArrowsVertical extends HTMLElement {
   declare requestRender: () => void;
 }

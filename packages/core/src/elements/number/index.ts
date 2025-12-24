@@ -1,13 +1,15 @@
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
 
 import { coerceNumber, dispatchControlEvent, setBooleanAttribute } from '../shared';
 
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
+
 import '../input';
+import '../icons/interface/minus';
+import '../icons/interface/plus';
 @Component({
   tag: 'ease-number-input',
   styles: `
@@ -23,7 +25,7 @@ import '../input';
     ease-input {
       --ease-input-padding: 0;
       text-align: center;
-      font-family: 'Geist Mono', monospace;
+      font-family: var(--ease-font-mono, 'Geist Mono', monospace);
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum";
     }
@@ -37,7 +39,7 @@ import '../input';
         position: absolute;
         pointer-events: none;
         inset: 0;
-        background-color: var(--color-white-8);
+        background-color: var(--ease-number-blink-color, var(--color-white-8));
       }
     }
 

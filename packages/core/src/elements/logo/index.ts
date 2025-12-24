@@ -1,15 +1,95 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-
 import { html } from 'lit-html';
 
-type LogoLoaderState = 'idle' | 'enter' | 'loop' | 'exit';
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+
+/** Logo loader states */
+type LogoLoaderState = 'idle' | 'intro' | 'loop' | 'exit';
+
+/** Intro animation variants */
+export type LogoIntroVariant = 'wave' | 'particle';
+
+/** Dot data with center coordinates */
+interface DotData {
+  id: string;
+  cx: number;
+  cy: number;
+}
+
+/** Center of the SVG viewBox */
+const CENTER = { x: 74, y: 74 };
+
+/** All dots data with center coordinates (148x148 viewBox) */
+const DOTS_DATA: DotData[] = [
+  // Outer dots
+  { id: 'dot-1', cx: 7.22725, cy: 73.99975 },
+  { id: 'dot-2', cx: 8.0, cy: 107.63685 },
+  { id: 'dot-3', cx: 41.36365, cy: 7.72734 },
+  { id: 'dot-4', cx: 40.36105, cy: 40.36375 },
+  { id: 'dot-5', cx: 40.36105, cy: 107.63625 },
+  { id: 'dot-6', cx: 41.36365, cy: 140.77285 },
+  { id: 'dot-7', cx: 73.99995, cy: 7.22725 },
+  { id: 'dot-8', cx: 73.99995, cy: 140.77325 },
+  { id: 'dot-9', cx: 108.13785, cy: 7.72734 },
+  { id: 'dot-10', cx: 107.88425, cy: 73.99975 },
+  { id: 'dot-11', cx: 108.13785, cy: 140.77285 },
+  { id: 'dot-12', cx: 141.27285, cy: 40.86385 },
+  { id: 'dot-13', cx: 140.77225, cy: 73.99975 },
+  { id: 'dot-14', cx: 141.27285, cy: 107.63685 },
+  // Inner dots (large)
+  { id: 'dot-15', cx: 40.36165, cy: 73.99925 },
+  { id: 'dot-16', cx: 74.00125, cy: 40.36345 },
+  { id: 'dot-17', cx: 74.00125, cy: 73.99925 },
+  { id: 'dot-18', cx: 74.00125, cy: 107.63585 },
+  { id: 'dot-19', cx: 107.63485, cy: 40.36345 },
+  { id: 'dot-20', cx: 107.63485, cy: 107.63585 },
+  // Corner small dots
+  { id: 'dot-21', cx: 141.77, cy: 8.23 },
+  { id: 'dot-22', cx: 141.77, cy: 140.77 },
+  { id: 'dot-23', cx: 7.73019, cy: 140.77 },
+  { id: 'dot-24', cx: 7.72018, cy: 8.22 },
+  { id: 'dot-25', cx: 7.73518, cy: 40.865 }
+];
+
+/** Inner/large dot IDs (in animation order) */
+const INNER_DOT_IDS = ['dot-19', 'dot-20', 'dot-18', 'dot-15', 'dot-17', 'dot-16'];
+
+/** Outer dot IDs (all except inner) */
+const OUTER_DOT_IDS = DOTS_DATA.map((d) => d.id).filter((id) => !INNER_DOT_IDS.includes(id));
+
+/** Force reflow on an element */
+const forceReflow = (el: Element): void => {
+  void window.getComputedStyle(el).opacity;
+};
+
+/** Get angle from center */
+const getAngle = (dot: DotData): number => Math.atan2(dot.cy - CENTER.y, dot.cx - CENTER.x);
+
+/** Sort dots by angle for circular wave effects */
+const sortByAngle = (ids: string[]): DotData[] =>
+  ids
+    .map((id) => DOTS_DATA.find((d) => d.id === id))
+    .filter((dot): dot is DotData => dot != null)
+    .sort((a, b) => getAngle(a) - getAngle(b));
+
+/** Animation durations */
+const LOOP_DURATION = 1500;
+const ROTATION_DURATION = 600;
 
 @Component({
   tag: 'ease-logo-loader',
   styles: `
     :host {
       display: inline-block;
+      --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+      --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+      --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+      
+      /* Dot colors using theme tokens - fallback to defaults */
+      --dot-dark: var(--color-gray-0, oklab(98.81% 0 0));
+      --dot-medium: var(--color-gray-600, oklab(65.21% -0.0019 -0.0144));
+      --dot-light: var(--color-gray-700, oklab(37.92% -0.0006 -0.0179));
+      --dot-accent: var(--color-blue-600, oklab(76.85% 0.0462 -0.1115));
     }
 
     .logo-loader {
@@ -19,12 +99,6 @@ type LogoLoaderState = 'idle' | 'enter' | 'loop' | 'exit';
       justify-content: center;
       width: var(--logo-loader-size, 36px);
       height: var(--logo-loader-size, 36px);
-      --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
-      --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
-      --color-primary: #454356;
-      --color-secondary: #69677e;
-      --color-node: #ffffff;
-      --color-accent: #24d69d;
     }
 
     .logo-loader__svg {
@@ -32,169 +106,149 @@ type LogoLoaderState = 'idle' | 'enter' | 'loop' | 'exit';
       height: 100%;
       display: block;
       transform-origin: center;
-      transition: transform 420ms var(--ease-out), filter 420ms var(--ease-out);
+      overflow: visible;
     }
 
-    .logo-loader[data-state='idle'] .logo-loader__svg {
-      transform: scale(1);
-      filter: none;
-    }
-
-    .logo-loader[data-state='enter'] .logo-loader__svg,
-    .logo-loader[data-state='loop'] .logo-loader__svg {
-      transform: scale(1.02);
-      filter: drop-shadow(0 0 10px rgba(36, 214, 157, 0.28));
-    }
-
-    .logo-loader[data-state='exit'] .logo-loader__svg {
-      transform: scale(0.98);
-      filter: none;
-    }
-
-    .logo-loader__ring--primary rect,
-    .logo-loader__ring--secondary rect,
-    .logo-loader__nodes rect {
+    .logo-loader__svg rect {
+      transform-box: fill-box;
       transform-origin: center;
-      transition: transform 260ms var(--ease-out), opacity 260ms var(--ease-out);
+      transition:
+        transform 380ms var(--ease-out),
+        fill 320ms ease,
+        opacity 320ms ease;
     }
 
-    .logo-loader__ring--primary rect {
-      fill: var(--color-primary);
+    /* State: intro - dots are animating in */
+    .logo-loader[data-state='intro'] .logo-loader__svg rect {
+      opacity: 0;
+      transform: scale(0);
     }
 
-    .logo-loader__ring--secondary rect {
-      fill: var(--color-secondary);
-    }
-
-    .logo-loader__nodes rect {
-      fill: var(--color-node);
-    }
-
-    .logo-loader[data-state='loop'] .logo-loader__ring--primary rect {
-      animation: logo-loader-dot-primary 960ms var(--ease-in-out) infinite;
-    }
-
-    .logo-loader[data-state='loop'] .logo-loader__ring--secondary rect {
-      animation: logo-loader-dot-secondary 1280ms var(--ease-in-out) infinite;
-    }
-
-    .logo-loader[data-state='loop'] .logo-loader__nodes rect {
-      animation: logo-loader-node 1600ms var(--ease-in-out) infinite;
-    }
-
-    .logo-loader[data-state='loop'] .logo-loader__ring--primary rect:nth-child(4n + 1),
-    .logo-loader[data-state='loop'] .logo-loader__ring--secondary rect:nth-child(4n + 1),
-    .logo-loader[data-state='loop'] .logo-loader__nodes rect:nth-child(4n + 1) {
-      animation-delay: 0ms;
-    }
-
-    .logo-loader[data-state='loop'] .logo-loader__ring--primary rect:nth-child(4n + 2),
-    .logo-loader[data-state='loop'] .logo-loader__ring--secondary rect:nth-child(4n + 2),
-    .logo-loader[data-state='loop'] .logo-loader__nodes rect:nth-child(4n + 2) {
-      animation-delay: 120ms;
-    }
-
-    .logo-loader[data-state='loop'] .logo-loader__ring--primary rect:nth-child(4n + 3),
-    .logo-loader[data-state='loop'] .logo-loader__ring--secondary rect:nth-child(4n + 3),
-    .logo-loader[data-state='loop'] .logo-loader__nodes rect:nth-child(4n + 3) {
-      animation-delay: 240ms;
-    }
-
-    .logo-loader[data-state='loop'] .logo-loader__ring--primary rect:nth-child(4n + 4),
-    .logo-loader[data-state='loop'] .logo-loader__ring--secondary rect:nth-child(4n + 4),
-    .logo-loader[data-state='loop'] .logo-loader__nodes rect:nth-child(4n + 4) {
-      animation-delay: 360ms;
-    }
-
-    .logo-loader[data-state='exit'] .logo-loader__ring--primary rect,
-    .logo-loader[data-state='exit'] .logo-loader__ring--secondary rect {
-      animation: logo-loader-dot-exit 260ms var(--ease-out) forwards;
-    }
-
-    .logo-loader[data-state='exit'] .logo-loader__nodes rect {
-      animation: logo-loader-node-exit 260ms var(--ease-out) forwards;
-    }
-
-    @keyframes logo-loader-dot-primary {
-      0% {
-        transform: scale(1);
-        opacity: 0.7;
-        fill: var(--color-primary);
+    /* Outer dots loading animation */
+    @keyframes loading-outer {
+      0%, 100% {
+        transform: scale(var(--base-scale, 1));
+        fill: var(--dot-light);
+        opacity: 0.4;
       }
-      45% {
-        transform: scale(1.4);
+      15% {
+        transform: scale(calc(var(--base-scale, 1) * 1.35));
+        fill: var(--dot-dark);
         opacity: 1;
-        fill: var(--color-accent);
       }
-      100% {
-        transform: scale(1);
-        opacity: 0.7;
-        fill: var(--color-primary);
+      35% {
+        transform: scale(var(--base-scale, 1));
+        fill: var(--dot-medium);
+        opacity: 0.8;
       }
     }
 
-    @keyframes logo-loader-dot-secondary {
-      0% {
-        transform: scale(1);
-        opacity: 0.6;
+    /* Inner dots loading animation */
+    @keyframes loading-inner {
+      0%, 100% {
+        transform: scale(var(--base-scale, 0.6));
+        opacity: 0.7;
+        fill: var(--dot-medium);
       }
       50% {
-        transform: scale(1.25);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 0.6;
+        transform: scale(calc(var(--base-scale, 0.6) * 1.9));
+        opacity: 0.1;
+        fill: var(--dot-light);
       }
     }
 
-    @keyframes logo-loader-node {
+    .dot-loading {
+      animation-name: loading-outer;
+      animation-duration: 600ms;
+      animation-timing-function: cubic-bezier(0.3, 0.6, 0.4, 1);
+      animation-iteration-count: infinite;
+      animation-fill-mode: both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .dot-loading-inner {
+      animation-name: loading-inner;
+      animation-duration: 1500ms;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      animation-fill-mode: both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    /* Exit animation class */
+    .restoring {
+      transition:
+        transform 450ms cubic-bezier(0.25, 0, 0.5, 1),
+        fill 350ms ease,
+        opacity 350ms ease;
+    }
+
+    /* Particle intro animation */
+    @keyframes particle-bounce {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.25); }
+      65% { transform: scale(0.95); }
+      85% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .particle-bounce {
+      animation: particle-bounce 400ms var(--ease-overshoot) both;
+    }
+
+    /* Shockwave ring animation */
+    @keyframes shockwave-expansion {
       0% {
         transform: scale(1);
-      }
-      30% {
-        transform: scale(1.08);
-      }
-      60% {
-        transform: scale(0.96);
+        opacity: 1;
+        stroke-width: 1.5px;
       }
       100% {
-        transform: scale(1);
+        transform: scale(4);
+        opacity: 0;
+        stroke-width: 0.5px;
       }
     }
 
-    @keyframes logo-loader-dot-exit {
+    .shockwave-ring {
+      fill: none;
+      stroke: var(--dot-dark);
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: shockwave-expansion 900ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+    }
+
+    /* Pulse wave for intro */
+    @keyframes pulse-wave {
       0% {
-        transform: scale(1.08);
-        opacity: 1;
+        transform: scale(1);
+        filter: brightness(1);
+      }
+      50% {
+        transform: scale(1.2);
+        filter: brightness(1.6);
+        fill: var(--dot-light);
       }
       100% {
         transform: scale(1);
-        opacity: 1;
+        filter: brightness(1);
       }
     }
 
-    @keyframes logo-loader-node-exit {
-      0% {
-        transform: scale(1.04);
-      }
-      100% {
-        transform: scale(1);
-      }
+    .dot-pulse-wave {
+      animation: pulse-wave var(--pulse-duration, 500ms) var(--pulse-delay, 0ms) cubic-bezier(0.455, 0.03, 0.515, 0.955);
     }
 
     @media (prefers-reduced-motion: reduce) {
       .logo-loader__svg {
         transition: none;
         transform: scale(1);
-        filter: none;
       }
-      .logo-loader__ring--primary rect,
-      .logo-loader__ring--secondary rect,
-      .logo-loader__nodes rect {
+      .logo-loader__svg rect {
         animation: none !important;
         transition: none;
         transform: scale(1);
+        opacity: 1;
       }
     }
   `,
@@ -211,9 +265,7 @@ type LogoLoaderState = 'idle' | 'enter' | 'loop' | 'exit';
         style=${`--logo-loader-size:${size}px;`}
       >
         <svg
-          width="36"
-          height="36"
-          viewBox="0 0 36 36"
+          viewBox="0 0 148 148"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           class="logo-loader__svg"
@@ -222,37 +274,35 @@ type LogoLoaderState = 'idle' | 'enter' | 'loop' | 'exit';
           aria-hidden=${ariaLabelTrimmed ? null : 'true'}
           focusable=${ariaLabelTrimmed ? null : 'false'}
         >
-          <g class="logo-loader__ring logo-loader__ring--primary">
-            <rect width="1.09091" height="1.09091" rx="0.545457" transform="matrix(1 0 0 -1 1.09033 2.18115)" />
-            <rect x="8.18164" y="8.18213" width="3.27274" height="3.27274" rx="1.63637" />
-            <rect x="8.18164" y="24.5454" width="3.27274" height="3.27274" rx="1.63637" />
-            <rect x="16.3628" width="3.27274" height="3.27274" rx="1.63637" />
-            <rect x="16.3628" y="32.7275" width="3.27274" height="3.27274" rx="1.63637" />
-            <rect x="25.0903" y="0.54541" width="2.18183" height="2.18183" rx="1.09091" />
-            <rect x="24.5454" y="16.3633" width="3.27274" height="3.27274" rx="1.63637" />
-            <rect x="32.7271" y="16.3633" width="3.27274" height="3.27274" rx="1.63637" />
-          </g>
-          <g class="logo-loader__ring logo-loader__ring--secondary">
-            <rect width="1.09091" height="1.09091" rx="0.545457" transform="matrix(1 0 0 -1 1.09033 34.9097)" />
-            <rect width="1.09091" height="1.09091" rx="0.545457" transform="matrix(1 0 0 -1 33.8179 2.18115)" />
-            <rect width="1.09091" height="1.09091" rx="0.545457" transform="matrix(1 0 0 -1 33.8179 34.9097)" />
-            <rect x="0.54541" y="8.72705" width="2.18183" height="2.18183" rx="1.09091" />
-            <rect y="16.3633" width="3.27274" height="3.27274" rx="1.63637" />
-            <rect x="0.54541" y="25.0903" width="2.18183" height="2.18183" rx="1.09091" />
-            <rect x="8.72754" y="0.54541" width="2.18183" height="2.18183" rx="1.09091" />
-            <rect x="8.72754" y="33.2729" width="2.18183" height="2.18183" rx="1.09091" />
-            <rect x="25.0903" y="33.2729" width="2.18183" height="2.18183" rx="1.09091" />
-            <rect x="33.2729" y="8.72705" width="2.18183" height="2.18183" rx="1.09091" />
-            <rect x="33.2729" y="25.0903" width="2.18183" height="2.18183" rx="1.09091" />
-          </g>
-          <g class="logo-loader__nodes">
-            <rect x="6.54492" y="14.7275" width="6.54549" height="6.54549" rx="3.27274" />
-            <rect x="14.7266" y="6.54492" width="6.54549" height="6.54549" rx="3.27274" />
-            <rect x="14.7266" y="14.7275" width="6.54549" height="6.54549" rx="3.27274" />
-            <rect x="14.7266" y="22.9092" width="6.54549" height="6.54549" rx="3.27274" />
-            <rect x="22.9087" y="6.54492" width="6.54549" height="6.54549" rx="3.27274" />
-            <rect x="22.9087" y="22.9092" width="6.54549" height="6.54549" rx="3.27274" />
-          </g>
+          <g class="shockwave-container"></g>
+          
+          <rect id="dot-1" x="0.5" y="67.2725" width="13.4545" height="13.4545" rx="6.72727" fill="var(--dot-medium)" />
+          <rect id="dot-2" x="3.5" y="103.152" width="8.9697" height="8.9697" rx="4.48485" fill="var(--dot-medium)" />
+          <rect id="dot-3" x="36.8788" y="3.24249" width="8.9697" height="8.9697" rx="4.48485" fill="var(--dot-medium)" />
+          <rect id="dot-4" x="33.6338" y="33.6365" width="13.4545" height="13.4545" rx="6.72727" fill="var(--dot-medium)" />
+          <rect id="dot-5" x="33.6338" y="100.909" width="13.4545" height="13.4545" rx="6.72727" fill="var(--dot-medium)" />
+          <rect id="dot-6" x="36.8788" y="136.288" width="8.9697" height="8.9697" rx="4.48485" fill="var(--dot-medium)" />
+          <rect id="dot-7" x="67.2727" y="0.5" width="13.4545" height="13.4545" rx="6.72727" fill="var(--dot-light)" />
+          <rect id="dot-8" x="67.2727" y="134.046" width="13.4545" height="13.4545" rx="6.72727" fill="var(--dot-medium)" />
+          <rect id="dot-9" x="103.653" y="3.24249" width="8.9697" height="8.9697" rx="4.48485" fill="var(--dot-medium)" />
+          <rect id="dot-10" x="101.407" y="67.2725" width="13.4545" height="13.4545" rx="6.72727" fill="var(--dot-medium)" />
+          <rect id="dot-11" x="103.653" y="136.288" width="8.9697" height="8.9697" rx="4.48485" fill="var(--dot-light)" />
+          <rect id="dot-12" x="136.788" y="36.379" width="8.9697" height="8.9697" rx="4.48485" fill="var(--dot-light)" />
+          <rect id="dot-13" x="134.045" y="67.2725" width="13.4545" height="13.4545" rx="6.72727" fill="var(--dot-light)" />
+          <rect id="dot-14" x="136.788" y="103.152" width="8.9697" height="8.9697" rx="4.48485" fill="var(--dot-light)" />
+          
+          <rect id="dot-15" x="26.9071" y="60.5447" width="26.9091" height="26.9091" rx="13.4545" fill="var(--dot-dark)" />
+          <rect id="dot-16" x="60.5467" y="26.9089" width="26.9091" height="26.9091" rx="13.4545" fill="var(--dot-dark)" />
+          <rect id="dot-17" x="60.5467" y="60.5447" width="26.9091" height="26.9091" rx="13.4545" fill="var(--dot-dark)" />
+          <rect id="dot-18" x="60.5467" y="94.1813" width="26.9091" height="26.9091" rx="13.4545" fill="var(--dot-dark)" />
+          <rect id="dot-19" x="94.1803" y="26.9089" width="26.9091" height="26.9091" rx="13.4545" fill="var(--dot-dark)" />
+          <rect id="dot-20" x="94.1803" y="94.1813" width="26.9091" height="26.9091" rx="13.4545" fill="var(--dot-dark)" />
+          
+          <rect id="dot-21" x="139.53" y="5.98999" width="4.48" height="4.48" rx="2.24" fill="var(--dot-light)" />
+          <rect id="dot-22" x="139.53" y="138.53" width="4.48" height="4.48" rx="2.24" fill="var(--dot-light)" />
+          <rect id="dot-23" x="5.49019" y="138.53" width="4.48" height="4.48" rx="2.24" fill="var(--dot-light)" />
+          <rect id="dot-24" x="5.48018" y="5.97998" width="4.48" height="4.48" rx="2.24" fill="var(--dot-light)" />
+          <rect id="dot-25" x="4.37018" y="37.5" width="6.73" height="6.73" rx="3.365" fill="var(--dot-light)" />
         </svg>
       </div>
     `;
@@ -271,6 +321,13 @@ export class LogoLoader extends HTMLElement {
   })
   accessor loading = false;
 
+  @Prop<LogoIntroVariant, LogoLoader>({
+    type: 'string',
+    attribute: 'intro',
+    defaultValue: 'wave'
+  })
+  accessor intro: LogoIntroVariant = 'wave';
+
   @Prop<number | null, LogoLoader>({
     type: Number,
     attribute: 'size',
@@ -285,9 +342,10 @@ export class LogoLoader extends HTMLElement {
   })
   accessor ariaLabel: string | null = null;
 
-  #state: LogoLoaderState = 'idle';
-  #enterTimeoutId: number | null = null;
-  #exitTimeoutId: number | null = null;
+  #state: LogoLoaderState = 'intro';
+  #loopStartTime = 0;
+  #animationTimers: number[] = [];
+  #introCompleted = false;
 
   get state(): LogoLoaderState {
     return this.#state;
@@ -304,11 +362,24 @@ export class LogoLoader extends HTMLElement {
   }
 
   connectedCallback(): void {
-    if (this.loading) {
-      this.handleLoadingChange(true);
-    } else {
-      this.state = 'idle';
-    }
+    // Wait for first render before starting intro animation
+    // The Component decorator renders after connectedCallback via requestAnimationFrame
+    requestAnimationFrame(() => {
+      // Double RAF to ensure render is complete
+      requestAnimationFrame(() => {
+        if (this.loading) {
+          this.#runIntro(() => {
+            this.#introCompleted = true;
+            this.#startLoopAnimation();
+          });
+        } else {
+          this.#runIntro(() => {
+            this.#introCompleted = true;
+            this.state = 'idle';
+          });
+        }
+      });
+    });
   }
 
   disconnectedCallback(): void {
@@ -316,39 +387,482 @@ export class LogoLoader extends HTMLElement {
   }
 
   #clearTimers(): void {
-    if (this.#enterTimeoutId !== null) {
-      window.clearTimeout(this.#enterTimeoutId);
-      this.#enterTimeoutId = null;
+    for (const id of this.#animationTimers) {
+      window.clearTimeout(id);
     }
-    if (this.#exitTimeoutId !== null) {
-      window.clearTimeout(this.#exitTimeoutId);
-      this.#exitTimeoutId = null;
+    this.#animationTimers = [];
+  }
+
+  #setTimeout(fn: () => void, delay: number): number {
+    const id = window.setTimeout(fn, delay);
+    this.#animationTimers.push(id);
+    return id;
+  }
+
+  #getDot(id: string): SVGRectElement | null {
+    const svg = this.shadowRoot?.querySelector('.logo-loader__svg');
+    return svg?.querySelector(`#${id}`) as SVGRectElement | null;
+  }
+
+  #getShockwaveContainer(): SVGGElement | null {
+    return this.shadowRoot?.querySelector('.shockwave-container') as SVGGElement | null;
+  }
+
+  #resetDotsState(instant = false, keepOpacity = false): void {
+    const container = this.#getShockwaveContainer();
+    if (container) {
+      container.innerHTML = '';
+    }
+
+    for (const dot of DOTS_DATA) {
+      const el = this.#getDot(dot.id);
+      if (!el) {
+        continue;
+      }
+
+      if (instant) {
+        el.style.transition = 'none';
+      } else {
+        el.style.transition = '';
+      }
+
+      // Remove all animation classes
+      el.classList.remove('dot-loading', 'dot-loading-inner', 'restoring', 'dot-pulse-wave', 'particle-bounce');
+
+      el.style.removeProperty('--base-scale');
+      el.style.removeProperty('--delay');
+      el.style.removeProperty('--pulse-delay');
+      el.style.removeProperty('--pulse-duration');
+
+      // Reset inline styles
+      el.style.transform = 'scale(1)';
+
+      if (!keepOpacity) {
+        el.style.opacity = instant ? '1' : '';
+      }
+      el.style.removeProperty('fill');
+      el.style.removeProperty('filter');
+
+      if (instant) {
+        forceReflow(el);
+        el.style.removeProperty('transition');
+      }
     }
   }
 
+  /** Ensure all dots are visible */
+  #ensureVisibility(): void {
+    for (const dot of DOTS_DATA) {
+      const el = this.#getDot(dot.id);
+      if (el && (el.style.opacity === '0' || el.style.opacity === '')) {
+        el.style.transition = 'opacity 200ms ease-out';
+        el.style.opacity = '1';
+      }
+    }
+  }
+
+  /** Run wave intro animation */
+  #runWaveIntro(onComplete?: () => void): void {
+    this.state = 'intro';
+
+    // Prepare dots hidden
+    for (const dot of DOTS_DATA) {
+      const el = this.#getDot(dot.id);
+      if (!el) {
+        continue;
+      }
+      el.style.transition = 'none';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0)';
+      forceReflow(el);
+    }
+
+    const innerDotIds = new Set(INNER_DOT_IDS);
+    const innerDots = DOTS_DATA.filter((d) => innerDotIds.has(d.id));
+    const outerDots = DOTS_DATA.filter((d) => !innerDotIds.has(d.id));
+
+    // WAVE 1: Inner dots appear at half scale
+    const orderedInner = sortByAngle(innerDots.map((d) => d.id));
+    orderedInner.forEach((dot, index) => {
+      const el = this.#getDot(dot.id);
+      if (!el) {
+        return;
+      }
+
+      el.style.fill = 'var(--dot-medium)';
+      forceReflow(el);
+      el.style.removeProperty('transition');
+
+      const delay = index * 75;
+      this.#setTimeout(() => {
+        el.style.transition = 'transform 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 400ms ease-out';
+        el.style.opacity = '1';
+        el.style.transform = 'scale(0.5)';
+      }, delay);
+    });
+
+    // WAVE 2: Inner to full scale + outer appear
+    this.#setTimeout(() => {
+      // Inner dots to full scale
+      orderedInner.forEach((dot, index) => {
+        const el = this.#getDot(dot.id);
+        if (!el) {
+          return;
+        }
+
+        const delay = index * 65;
+        this.#setTimeout(() => {
+          el.style.transition = 'transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1), fill 450ms ease-out';
+          el.style.transform = 'scale(1)';
+          el.style.removeProperty('fill');
+        }, delay);
+      });
+
+      // Outer dots appear
+      const orderedOuter = sortByAngle(outerDots.map((d) => d.id));
+      orderedOuter.forEach((dot, index) => {
+        const el = this.#getDot(dot.id);
+        if (!el) {
+          return;
+        }
+
+        el.style.removeProperty('transition');
+        const delay = 150 + index * 40;
+        this.#setTimeout(() => {
+          el.style.transition = 'transform 650ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 550ms ease-out';
+          el.style.opacity = '1';
+          el.style.transform = 'scale(1)';
+        }, delay);
+      });
+    }, 650);
+
+    // Completion
+    this.#setTimeout(() => {
+      onComplete?.();
+    }, 1400);
+  }
+
+  /** Run particle intro animation */
+  #runParticleIntro(onComplete?: () => void): void {
+    this.state = 'intro';
+
+    // Prepare dots hidden
+    for (const dot of DOTS_DATA) {
+      const el = this.#getDot(dot.id);
+      if (!el) {
+        continue;
+      }
+      el.style.transition = 'none';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0)';
+      forceReflow(el);
+    }
+
+    const innerDotIds = new Set(INNER_DOT_IDS);
+
+    // Create particle animation data
+    const particles = DOTS_DATA.map((dot, index) => {
+      const finalAngle = getAngle(dot);
+      const startDistance = 110 + Math.random() * 80;
+      const angleVariation = (Math.random() - 0.5) * Math.PI * 0.35;
+      const startAngle = finalAngle + angleVariation;
+      const startX = Math.cos(startAngle) * startDistance;
+      const startY = Math.sin(startAngle) * startDistance;
+
+      const curvature = Math.random() * 0.4 + 0.3;
+      const controlAngle = startAngle + (Math.random() - 0.5) * Math.PI * curvature;
+      const controlDistance = startDistance * 0.6;
+      const controlX = Math.cos(controlAngle) * controlDistance;
+      const controlY = Math.sin(controlAngle) * controlDistance;
+
+      const group = Math.floor(index / 5);
+      const groupDelay = group * 110;
+      const withinGroupDelay = (index % 5) * 40;
+      const delay = groupDelay + withinGroupDelay + Math.random() * 40;
+      const duration = 600 + Math.random() * 300;
+
+      return {
+        ...dot,
+        startX,
+        startY,
+        controlX,
+        controlY,
+        delay,
+        duration,
+        impactTime: delay + duration,
+        rotationSpeed: 720 + Math.random() * 360,
+        isInner: innerDotIds.has(dot.id)
+      };
+    });
+
+    particles.sort((a, b) => a.delay - b.delay);
+
+    // First 3 inner dots for shockwaves
+    const shockwaveParticles = particles
+      .filter((p) => p.isInner)
+      .sort((a, b) => a.impactTime - b.impactTime)
+      .slice(0, 3);
+    const shockwaveSet = new Set(shockwaveParticles.map((p) => p.id));
+
+    // Animate each particle
+    for (const particle of particles) {
+      const el = this.#getDot(particle.id);
+      if (!el) {
+        continue;
+      }
+
+      el.style.transform = `translate(${particle.startX}px, ${particle.startY}px) scale(0.05)`;
+
+      this.#setTimeout(() => {
+        el.style.opacity = '1';
+
+        const steps = 30;
+        let step = 0;
+
+        const animateStep = (): void => {
+          step++;
+          const progress = step / steps;
+          const t = progress;
+          const mt = 1 - t;
+
+          const x = mt * mt * particle.startX + 2 * mt * t * particle.controlX + t * t * 0;
+          const y = mt * mt * particle.startY + 2 * mt * t * particle.controlY + t * t * 0;
+
+          const easeOut = 1 - (1 - progress) ** 4;
+          const scale = 0.05 + easeOut * 0.95;
+          const rotation = progress * particle.rotationSpeed;
+
+          el.style.transition = 'transform 33ms linear';
+          el.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rotation}deg)`;
+
+          if (step < steps) {
+            requestAnimationFrame(animateStep);
+          } else {
+            // Impact - clear all transforms
+            const bounceDuration = 250;
+            el.style.transition = `transform ${bounceDuration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+            el.style.transform = 'scale(1)';
+
+            if (shockwaveSet.has(particle.id)) {
+              this.#triggerShockwave(particle);
+            }
+
+            this.#setTimeout(() => {
+              el.classList.add('particle-bounce');
+              this.#setTimeout(() => {
+                el.classList.remove('particle-bounce');
+              }, 400);
+            }, bounceDuration);
+          }
+        };
+
+        requestAnimationFrame(animateStep);
+      }, particle.delay);
+    }
+
+    // Early completion
+    const earlyRevealTime = Math.max(...particles.map((p) => p.delay)) * 0.6;
+    this.#setTimeout(() => {
+      onComplete?.();
+    }, earlyRevealTime);
+
+    // Final cleanup
+    const maxTime = Math.max(...particles.map((p) => p.impactTime + 500));
+    this.#setTimeout(() => {
+      this.#resetDotsState(false, true);
+    }, maxTime);
+  }
+
+  #triggerShockwave(dot: DotData): void {
+    const container = this.#getShockwaveContainer();
+    if (!container) {
+      return;
+    }
+
+    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('cx', String(dot.cx));
+    ring.setAttribute('cy', String(dot.cy));
+    ring.setAttribute('r', '13.45');
+    ring.classList.add('shockwave-ring');
+
+    container.appendChild(ring);
+
+    this.#setTimeout(() => {
+      ring.remove();
+    }, 900);
+  }
+
+  #runIntro(onComplete?: () => void): void {
+    if (this.intro === 'particle') {
+      this.#runParticleIntro(onComplete);
+    } else {
+      this.#runWaveIntro(onComplete);
+    }
+  }
+
+  #startLoopAnimation(): void {
+    this.#loopStartTime = performance.now();
+    this.#ensureVisibility();
+
+    // Inner dots - scale down with transition, then add animation class
+    const orderedInnerDots = sortByAngle(INNER_DOT_IDS);
+    let seedDelay = 0;
+
+    orderedInnerDots.forEach((dot, index) => {
+      this.#setTimeout(() => {
+        const el = this.#getDot(dot.id);
+        if (!el) {
+          return;
+        }
+
+        const targetScale = 0.6;
+
+        // Transition to initial loading state
+        el.style.transition = 'all 450ms cubic-bezier(0.4, 0, 0.2, 1)';
+        el.style.transform = `scale(${targetScale})`;
+        el.style.fill = 'var(--dot-medium)';
+        el.style.opacity = '0.7';
+
+        // Setup for dynamic animation
+        el.style.setProperty('--base-scale', `${targetScale}`);
+
+        // Staggered start based on angle
+        const angle = getAngle(dot);
+        const normalizedAngle = (angle + Math.PI) / (2 * Math.PI);
+        const animationDelayMs = normalizedAngle * LOOP_DURATION;
+        el.style.setProperty('--delay', `${animationDelayMs}ms`);
+
+        // Add animation class after transition starts
+        this.#setTimeout(() => {
+          el.classList.add('dot-loading-inner');
+        }, 100);
+      }, seedDelay);
+
+      seedDelay += 60;
+    });
+
+    // Outer dots - add animation after inner dots start
+    const orderedOuterDots = sortByAngle(OUTER_DOT_IDS);
+    this.#setTimeout(() => {
+      orderedOuterDots.forEach((dot) => {
+        const el = this.#getDot(dot.id);
+        if (!el) {
+          return;
+        }
+
+        el.style.transition = 'all 350ms ease-out';
+
+        const baseScale = 1.2;
+        el.style.setProperty('--base-scale', `${baseScale}`);
+
+        const angle = getAngle(dot);
+        const normalizedAngle = (angle + Math.PI) / (2 * Math.PI);
+        const animationDelayMs = normalizedAngle * ROTATION_DURATION;
+        el.style.setProperty('--delay', `${animationDelayMs}ms`);
+
+        this.#setTimeout(() => {
+          el.classList.add('dot-loading');
+        }, 50);
+      });
+
+      this.state = 'loop';
+    }, seedDelay + 100);
+  }
+
+  #endLoopAnimation(): void {
+    const now = performance.now();
+    const elapsed = Math.max(0, now - this.#loopStartTime);
+
+    // Wait for current cycle to complete
+    const timeInCycle = elapsed % LOOP_DURATION;
+    const timeLeft = LOOP_DURATION - timeInCycle + 50;
+
+    this.state = 'exit';
+
+    this.#setTimeout(() => {
+      // Restore all dots
+      const orderedAllDots = sortByAngle(DOTS_DATA.map((d) => d.id));
+
+      orderedAllDots.forEach((dot, i) => {
+        const el = this.#getDot(dot.id);
+        if (!el) {
+          return;
+        }
+
+        const delay = i * 18;
+
+        this.#setTimeout(() => {
+          // Stop animations
+          el.classList.remove('dot-loading', 'dot-loading-inner');
+          el.style.removeProperty('--delay');
+          el.style.removeProperty('--base-scale');
+
+          // Restore appearance
+          el.classList.add('restoring');
+          el.style.transform = 'scale(1)';
+          el.style.opacity = '1';
+          el.style.removeProperty('fill');
+
+          this.#setTimeout(() => {
+            el.classList.remove('restoring');
+          }, 500);
+        }, delay);
+      });
+
+      // Transition to idle
+      this.#setTimeout(
+        () => {
+          this.state = 'idle';
+        },
+        orderedAllDots.length * 18 + 500
+      );
+    }, timeLeft);
+  }
+
   handleLoadingChange(next: boolean): void {
+    // Don't interrupt intro animation - it will handle loading state when complete
+    if (!this.#introCompleted) {
+      return;
+    }
+
     this.#clearTimers();
 
     if (next) {
       if (this.state === 'idle' || this.state === 'exit') {
-        this.state = 'enter';
-        this.#enterTimeoutId = window.setTimeout(() => {
-          if (this.loading) {
-            this.state = 'loop';
-          }
-        }, 420);
+        // Clear state before starting
+        this.#resetDotsState(true, true);
+        this.#startLoopAnimation();
       }
     } else {
-      if (this.state === 'loop' || this.state === 'enter') {
-        this.state = 'exit';
-        this.#exitTimeoutId = window.setTimeout(() => {
-          if (!this.loading) {
-            this.state = 'idle';
-          }
-        }, 320);
+      if (this.state === 'loop') {
+        this.#endLoopAnimation();
+      } else if (this.state !== 'intro' && this.state !== 'exit') {
+        this.state = 'idle';
+      }
+    }
+  }
+
+  /** Public method to replay intro animation */
+  playIntro(variant?: LogoIntroVariant): void {
+    this.#clearTimers();
+    this.#resetDotsState(true);
+
+    const originalIntro = this.intro;
+    if (variant) {
+      this.intro = variant;
+    }
+
+    this.#runIntro(() => {
+      this.#introCompleted = true;
+      if (this.loading) {
+        this.#startLoopAnimation();
       } else {
         this.state = 'idle';
       }
+    });
+
+    if (variant) {
+      this.intro = originalIntro;
     }
   }
 }

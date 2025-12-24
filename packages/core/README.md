@@ -1,1009 +1,824 @@
 # @easemate/web-kit
 
-A modern, lightweight Web Components UI kit built with TypeScript, lit-html, and CSS custom properties. Designed for building control panels, settings interfaces, and interactive dashboards—similar to [Leva](https://github.com/pmndrs/leva), [dat.GUI](https://github.com/dataarts/dat.gui), or [lil-gui](https://lil-gui.georgealways.com/).
+A modern, framework-agnostic UI kit of web components for building animation control panels.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+  - [Basic Usage](#basic-usage)
+  - [Selective Loading](#selective-loading)
+  - [Theme Switching](#theme-switching)
+- [Components](#components)
+  - [Controls](#controls)
+  - [Layout & Display](#layout--display)
+  - [Advanced](#advanced)
+  - [Icons](#icons)
+- [Usage Examples](#usage-examples)
+  - [Basic Controls](#basic-controls)
+  - [State Panel](#state-panel)
+    - [Header Actions](#header-actions)
+    - [Tabs](#tabs)
+    - [Tabs with Actions](#tabs-with-actions)
+    - [Footer](#footer)
+  - [JavaScript Integration](#javascript-integration)
+    - [Tab Control](#tab-control)
+  - [Event Handling](#event-handling)
+- [Configuration](#configuration)
+  - [initWebKit Options](#initwebkit-options)
+  - [Theme Configuration](#theme-configuration)
+  - [Font Configuration](#font-configuration)
+  - [Lazy Loading](#lazy-loading)
+  - [Component Replacement](#component-replacement)
+- [Theming](#theming)
+  - [CSS Custom Properties](#css-custom-properties)
+  - [JavaScript Theme API](#javascript-theme-api)
+  - [Token Reference](#token-reference)
+- [API Reference](#api-reference)
+  - [Controller API](#controller-api)
+  - [Package Exports](#package-exports)
+  - [State Panel API](#state-panel-api)
+- [Accessibility](#accessibility)
+- [SSR Support](#ssr-support)
+- [License](#license)
+
+---
 
 ## Features
 
-- **Native Web Components** - Framework-agnostic, works with React, Vue, Svelte, or vanilla JS
-- **TypeScript First** - Full type definitions and IntelliSense support
-- **Tree-shakeable** - Import only what you need
-- **CSS Custom Properties** - Easy theming with runtime customization
-- **State Management** - Built-in `<ease-state>` component for aggregating control values
-- **Accessible** - ARIA attributes and keyboard navigation
-- **Modern CSS** - Uses oklab colors, CSS anchor positioning, and container queries
+- 🎨 **Rich Component Library** — Sliders, toggles, color pickers, dropdowns, curve editors, and more
+- 🌙 **Dark Theme by Default** — Beautiful dark UI with OKLAB color palette
+- 🔌 **Framework Agnostic** — Works with vanilla JS, React, Vue, Svelte, or any framework
+- 📦 **Tree-Shakeable** — Import only what you need
+- 🎯 **TypeScript First** — Full type definitions included
+- ♿ **Accessible** — ARIA attributes and keyboard navigation
+- 🎭 **Customizable** — CSS custom properties and `::part` selectors for styling
+- 📡 **State Aggregation** — Control panel state management with `<ease-state>`
+- 🚀 **No CSS Import Required** — `initWebKit()` handles everything programmatically
+
+---
 
 ## Installation
 
 ```bash
-# npm
 npm install @easemate/web-kit
-
-# pnpm
+# or
 pnpm add @easemate/web-kit
-
-# yarn
+# or
 yarn add @easemate/web-kit
 ```
+
+---
 
 ## Quick Start
 
 ### Basic Usage
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="@easemate/web-kit/styles/vars.css">
-</head>
-<body>
-  <ease-state id="controls">
-    <span slot="headline">Settings</span>
-    <div slot="entry">
-      <ease-field label="Speed">
-        <ease-slider name="speed" min="0" max="100" value="50"></ease-slider>
-      </ease-field>
-      <ease-field label="Enabled">
-        <ease-toggle name="enabled" checked></ease-toggle>
-      </ease-field>
-    </div>
-  </ease-state>
+```typescript
+import { initWebKit } from '@easemate/web-kit';
 
-  <script type="module">
-    import '@easemate/web-kit';
-    
-    const controls = document.getElementById('controls');
-    controls.addEventListener('state-change', (e) => {
-      console.log(e.detail.data); // { speed: 50, enabled: true }
-      console.log(e.detail.key);  // 'speed' or 'enabled'
-    });
-  </script>
-</body>
-</html>
+// Minimal - just register components
+initWebKit();
+
+// Full setup with theme, styles, and fonts
+const kit = initWebKit({
+  theme: 'default',
+  styles: 'main',
+  fonts: 'default'
+});
+
+// Components are now registered and ready to use!
 ```
 
-### With ES Modules
+This single call:
+- Registers all custom elements
+- Applies the dark theme variables
+- Injects CSS reset and base styles
+- Loads the default fonts (Instrument Sans, Geist Mono)
+
+### Selective Loading
 
 ```typescript
-import { 
-  State, 
-  Slider, 
-  Toggle, 
-  Field,
-  defineTheme 
-} from '@easemate/web-kit';
+import { initWebKit } from '@easemate/web-kit';
 
-// Components auto-register when imported
-// Access state programmatically
-const controls = document.querySelector('ease-state');
-controls.data = { speed: 75, enabled: false };
+// Only register specific components
+initWebKit({
+  include: ['ease-button', 'ease-slider', 'ease-toggle'],
+  theme: 'default'
+});
+
+// Or exclude components you don't need
+initWebKit({
+  exclude: ['ease-curve', 'ease-code'],
+  theme: 'default'
+});
+```
+
+### Theme Switching
+
+```typescript
+import { initWebKit, registerTheme } from '@easemate/web-kit';
+
+// Register a custom light theme
+registerTheme('light', {
+  base: null,
+  config: {
+    colors: {
+      gray: { 900: 'oklab(98% 0 0)', 0: 'oklab(20% 0 0)' },
+      foreground: 'var(--color-gray-0)'
+    },
+    vars: {
+      '--ease-panel-background': 'white',
+      '--ease-panel-border-color': 'color-mix(in oklab, black 10%, transparent)'
+    }
+  }
+});
+
+// Initialize with system theme detection
+const kit = initWebKit({
+  theme: {
+    mode: 'system', // 'light', 'dark', or 'system'
+    light: 'light',
+    dark: 'default'
+  },
+  styles: 'main',
+  fonts: 'default'
+});
+
+// Switch themes at runtime
+kit.theme?.mode('dark');
+kit.theme?.set('light');
 ```
 
 ---
 
-## State Management (Control Panel Pattern)
+## Components
 
-The `<ease-state>` component is the heart of building Leva-style control panels. It aggregates values from child controls into a single state object.
+### Controls
 
-### Basic State Controller
+| Component | Tag | Description |
+|-----------|-----|-------------|
+| Slider | `<ease-slider>` | Range slider with min/max/step |
+| Toggle | `<ease-toggle>` | Boolean switch |
+| Checkbox | `<ease-checkbox>` | Checkbox input |
+| Input | `<ease-input>` | Text input |
+| NumberInput | `<ease-number-input>` | Numeric input with stepper |
+| ColorInput | `<ease-color-input>` | Color input with picker |
+| ColorPicker | `<ease-color-picker>` | Full color picker UI |
+| Dropdown | `<ease-dropdown>` | Select dropdown |
+| RadioGroup | `<ease-radio-group>` | Radio button group |
+| RadioInput | `<ease-radio-input>` | Individual radio option |
+| Origin | `<ease-origin>` | Transform origin picker |
+
+### Layout & Display
+
+| Component | Tag | Description |
+|-----------|-----|-------------|
+| State | `<ease-state>` | State aggregation panel |
+| Field | `<ease-field>` | Label + control wrapper |
+| Button | `<ease-button>` | Action button |
+| Tooltip | `<ease-tooltip>` | Tooltip wrapper |
+| Popover | `<ease-popover>` | Floating content |
+
+### Advanced
+
+| Component | Tag | Description |
+|-----------|-----|-------------|
+| Curve | `<ease-curve>` | Cubic bezier / linear easing editor |
+| Code | `<ease-code>` | Syntax highlighted code |
+| Monitor | `<ease-monitor>` | Value monitor display |
+| MonitorFps | `<ease-monitor-fps>` | FPS counter |
+| LogoLoader | `<ease-logo-loader>` | Animated logo with intro animations and loading state |
+
+### Icons
+
+All icon components follow the pattern `<ease-icon-*>`:
+
+- `ease-icon-settings`, `ease-icon-dots`, `ease-icon-plus`, `ease-icon-minus`
+- `ease-icon-check`, `ease-icon-chevron`, `ease-icon-code`
+- `ease-icon-bezier`, `ease-icon-bezier-*` (bezier tools)
+- `ease-icon-anchor-add`, `ease-icon-anchor-remove`
+- And more...
+
+---
+
+## Usage Examples
+
+### Basic Controls
 
 ```html
-<ease-state id="scene-controls">
-  <span slot="headline">Scene Settings</span>
+<ease-slider name="opacity" value="0.5" min="0" max="1" step="0.01"></ease-slider>
+<ease-toggle name="visible" checked></ease-toggle>
+<ease-color-input name="background" value="#3b82f6"></ease-color-input>
+<ease-input name="label" value="Hello"></ease-input>
+<ease-number-input name="count" value="42" min="0" max="100"></ease-number-input>
+```
+
+### State Panel
+
+Basic panel with headline and controls:
+
+```html
+<ease-state>
+  <span slot="headline">Animation Controls</span>
   <div slot="entry">
-    <ease-field label="Rotation X">
-      <ease-slider name="rotationX" min="0" max="360" value="0"></ease-slider>
+    <ease-field label="Duration">
+      <ease-slider name="duration" value="1" min="0" max="5" step="0.1"></ease-slider>
     </ease-field>
-    <ease-field label="Rotation Y">
-      <ease-slider name="rotationY" min="0" max="360" value="0"></ease-slider>
+    <ease-field label="Easing">
+      <ease-dropdown name="easing" value="ease-out">
+        <button slot="content" value="linear">Linear</button>
+        <button slot="content" value="ease-in">Ease In</button>
+        <button slot="content" value="ease-out">Ease Out</button>
+        <button slot="content" value="ease-in-out">Ease In-Out</button>
+      </ease-dropdown>
     </ease-field>
-    <ease-field label="Scale">
-      <ease-number-input name="scale" min="0.1" max="10" step="0.1" value="1"></ease-number-input>
-    </ease-field>
-    <ease-field label="Wireframe">
-      <ease-toggle name="wireframe"></ease-toggle>
-    </ease-field>
-    <ease-field label="Color">
-      <ease-color-input name="color" value="#FF5500"></ease-color-input>
+    <ease-field label="Loop">
+      <ease-toggle name="loop"></ease-toggle>
     </ease-field>
   </div>
 </ease-state>
 ```
 
-### Listening to Changes
+#### Header Actions
 
-```typescript
-const controls = document.getElementById('scene-controls') as State;
+Add action buttons, links, or dropdowns to the panel header using the `actions` slot:
 
-// Event-based approach
-controls.addEventListener('state-change', (event) => {
-  const { data, key, value, previousValue } = event.detail;
+```html
+<ease-state>
+  <span slot="headline">Settings</span>
   
-  console.log(`${key} changed from ${previousValue} to ${value}`);
-  console.log('Full state:', data);
-  // { rotationX: 0, rotationY: 0, scale: 1, wireframe: false, color: '#FF5500' }
-});
-
-// Subscribe pattern (returns unsubscribe function)
-const unsubscribe = controls.subscribe(({ data, key, value }) => {
-  updateScene(data);
-});
-
-// Later: unsubscribe();
+  <!-- Action buttons -->
+  <button slot="actions" title="Settings">
+    <ease-icon-settings></ease-icon-settings>
+  </button>
+  <a slot="actions" href="/docs" title="Documentation">
+    <ease-icon-code></ease-icon-code>
+  </a>
+  
+  <!-- Dropdown menu in actions -->
+  <ease-dropdown slot="actions">
+    <ease-icon-dots slot="trigger"></ease-icon-dots>
+    <button slot="content" value="export">Export</button>
+    <button slot="content" value="import">Import</button>
+    <button slot="content" value="reset">Reset</button>
+  </ease-dropdown>
+  
+  <div slot="entry">
+    <!-- controls -->
+  </div>
+</ease-state>
 ```
 
-### Programmatic State Updates
+Action elements are automatically styled with hover states and proper spacing. Supported elements:
+- `<button>` — Action button with icon
+- `<a>` — Link with icon  
+- `<ease-dropdown>` — Dropdown menu (auto-positioned to bottom-end)
+
+#### Tabs
+
+Organize controls into tabbed sections (maximum 3 tabs). When tabs are present, the headline is automatically hidden.
+
+```html
+<ease-state active-tab="0">
+  <!-- Tab content uses slot="tab-{id}" pattern -->
+  <!-- Tab label comes from data-tab-label attribute -->
+  
+  <div slot="tab-transform" data-tab-label="Transform">
+    <ease-field label="X">
+      <ease-number-input name="x" value="0"></ease-number-input>
+    </ease-field>
+    <ease-field label="Y">
+      <ease-number-input name="y" value="0"></ease-number-input>
+    </ease-field>
+    <ease-field label="Rotation">
+      <ease-slider name="rotation" value="0" min="0" max="360"></ease-slider>
+    </ease-field>
+  </div>
+  
+  <div slot="tab-style" data-tab-label="Style">
+    <ease-field label="Opacity">
+      <ease-slider name="opacity" value="1" min="0" max="1" step="0.01"></ease-slider>
+    </ease-field>
+    <ease-field label="Color">
+      <ease-color-input name="color" value="#3b82f6"></ease-color-input>
+    </ease-field>
+  </div>
+  
+  <div slot="tab-animation" data-tab-label="Animation">
+    <ease-field label="Duration">
+      <ease-slider name="duration" value="1" min="0" max="5" step="0.1"></ease-slider>
+    </ease-field>
+    <ease-field label="Delay">
+      <ease-slider name="delay" value="0" min="0" max="2" step="0.1"></ease-slider>
+    </ease-field>
+  </div>
+</ease-state>
+```
+
+**Tab Attributes:**
+
+| Attribute | Description |
+|-----------|-------------|
+| `slot="tab-{id}"` | Assigns content to a tab. The `id` is used internally and for events. |
+| `data-tab-label` | Display label for the tab button. Falls back to `id` if not provided. |
+| `active-tab` | (on `<ease-state>`) Zero-based index of the initially active tab. |
+
+**Tab Behavior:**
+- Tabs are detected automatically from slotted elements with `slot="tab-*"` pattern
+- Maximum of 3 tabs supported
+- Switching tabs triggers a smooth crossfade animation with height transition
+- Keyboard navigation: Arrow keys, Home, End
+- State is tracked per-tab (only active tab's controls are in the state object)
+
+#### Tabs with Actions
+
+Combine tabs and header actions:
+
+```html
+<ease-state active-tab="0">
+  <!-- Actions appear to the right of tabs -->
+  <button slot="actions" title="Reset">
+    <ease-icon-minus></ease-icon-minus>
+  </button>
+  
+  <div slot="tab-basic" data-tab-label="Basic">
+    <!-- controls -->
+  </div>
+  <div slot="tab-advanced" data-tab-label="Advanced">
+    <!-- controls -->
+  </div>
+</ease-state>
+```
+
+#### Footer
+
+Add footer content that appears below all tab panels:
+
+```html
+<ease-state>
+  <span slot="headline">Controls</span>
+  <div slot="entry">
+    <!-- controls -->
+  </div>
+  <div slot="footer">
+    <ease-button>Apply</ease-button>
+    <ease-button variant="secondary">Cancel</ease-button>
+  </div>
+</ease-state>
+```
+
+### JavaScript Integration
 
 ```typescript
-// Get single value
-const rotation = controls.get<number>('rotationX');
+const state = document.querySelector('ease-state');
 
-// Set single value (updates the control and triggers event)
-controls.set('rotationX', 180);
+// Get current state
+console.log(state.state); // { duration: 1, easing: 'ease-out', loop: false }
 
-// Get all values
-const allValues = controls.getAll();
+// Get individual value
+const duration = state.get('duration');
 
-// Set multiple values at once
-controls.setAll({
-  rotationX: 90,
-  rotationY: 45,
-  scale: 2
+// Set value programmatically
+state.set('duration', 2.5);
+
+// Subscribe to changes
+const sub = state.subscribe((value, name) => {
+  console.log(`${name} changed to:`, value);
+});
+
+// Subscribe to specific control
+state.subscribe('duration', (value) => {
+  myAnimation.duration = value;
 });
 
 // Reset to initial values
-controls.reset();
+state.reset();
+
+// Cleanup
+sub.unsubscribe();
 ```
 
-### State Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `data` | `Record<string, unknown>` | `{}` | The state object. Setting this updates all matching controls. |
-
-### State Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `state-change` | `{ data, key, value, previousValue, event }` | Fired when any control value changes |
-
-### State Methods
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `get` | `get<T>(key: string): T` | Get a single value by key |
-| `set` | `set(key: string, value: unknown): void` | Set a single value |
-| `getAll` | `getAll(): StateData` | Get all values as an object |
-| `setAll` | `setAll(data: StateData): void` | Set multiple values at once |
-| `reset` | `reset(): void` | Reset all controls to their DOM values |
-| `subscribe` | `subscribe(callback): () => void` | Subscribe to changes, returns unsubscribe function |
-
----
-
-## Components Reference
-
-### Button
-
-A versatile button component with multiple variants and sizes.
-
-```html
-<ease-button>Default</ease-button>
-<ease-button variant="primary">Primary</ease-button>
-<ease-button variant="link">Link</ease-button>
-<ease-button variant="headless">Headless</ease-button>
-<ease-button block="icon"><ease-icon-settings /></ease-button>
-<ease-button block="small">Small</ease-button>
-<ease-button block="large">Large</ease-button>
-<ease-button pill>Pill Shape</ease-button>
-<ease-button full-width>Full Width</ease-button>
-<ease-button disabled>Disabled</ease-button>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `variant` | `'default' \| 'primary' \| 'headless' \| 'link'` | `'default'` | Visual style variant |
-| `block` | `'icon' \| 'small' \| 'medium' \| 'large'` | `'medium'` | Size variant |
-| `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | Button type attribute |
-| `disabled` | `boolean` | `false` | Disabled state |
-| `pill` | `boolean` | `false` | Pill-shaped border radius |
-| `fullWidth` | `boolean` | `false` | Full width button |
-
-#### CSS Variables
-
-| Variable | Description |
-|----------|-------------|
-| `--ease-button-radius` | Border radius override |
-
----
-
-### Input
-
-A text input with optional prefix and suffix slots.
-
-```html
-<ease-input placeholder="Enter text..." value="Hello"></ease-input>
-<ease-input type="email" placeholder="email@example.com"></ease-input>
-<ease-input headless placeholder="Headless input"></ease-input>
-<ease-input disabled value="Disabled"></ease-input>
-
-<!-- With prefix/suffix -->
-<ease-input placeholder="Search...">
-  <button slot="prefix"><ease-icon-search /></button>
-  <button slot="suffix"><ease-icon-clear /></button>
-</ease-input>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `value` | `string \| null` | `null` | Input value |
-| `placeholder` | `string \| null` | `null` | Placeholder text |
-| `type` | `string` | `'text'` | Input type (text, email, password, etc.) |
-| `name` | `string \| null` | `null` | Form field name |
-| `disabled` | `boolean` | `false` | Disabled state |
-| `headless` | `boolean` | `false` | Remove default styling |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `input` | `{ value: string, event: Event }` | Fired on input |
-| `change` | `{ value: string, event: Event }` | Fired on change |
-
-#### CSS Variables
-
-| Variable | Description |
-|----------|-------------|
-| `--ease-input-padding` | Input padding |
-
----
-
-### NumberInput
-
-A number input with increment/decrement buttons.
-
-```html
-<ease-number-input value="50" min="0" max="100" step="5"></ease-number-input>
-<ease-number-input name="quantity" value="1" min="1" max="10"></ease-number-input>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `value` | `number \| null` | `null` | Current value |
-| `min` | `number \| null` | `null` | Minimum value |
-| `max` | `number \| null` | `null` | Maximum value |
-| `step` | `number \| null` | `1` | Step increment |
-| `name` | `string \| null` | `null` | Form field name |
-| `disabled` | `boolean` | `false` | Disabled state |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `input` | `{ value: number, event: Event }` | Fired on input |
-| `change` | `{ value: number, event: Event }` | Fired on change |
-
----
-
-### Slider
-
-A range slider with visual value display.
-
-```html
-<ease-slider value="50" min="0" max="100"></ease-slider>
-<ease-slider value="0.5" min="0" max="1" step="0.01"></ease-slider>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `value` | `number \| null` | `null` | Current value |
-| `min` | `number \| null` | `0` | Minimum value |
-| `max` | `number \| null` | `100` | Maximum value |
-| `step` | `number \| null` | `null` | Step increment |
-| `disabled` | `boolean` | `false` | Disabled state |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `input` | `{ value: number, event: Event }` | Fired during drag |
-| `change` | `{ value: number, event: Event }` | Fired on release |
-
-#### CSS Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `--track-color` | `var(--color-gray-825)` | Track background |
-| `--active-track-color` | `var(--color-blue-1100)` | Active track fill |
-| `--thumb-color` | `var(--color-blue-900)` | Thumb color |
-| `--thumb-size` | `18px` | Thumb diameter |
-| `--track-height` | `4px` | Track height |
-
----
-
-### Toggle
-
-An animated toggle switch.
-
-```html
-<ease-toggle></ease-toggle>
-<ease-toggle checked></ease-toggle>
-<ease-toggle disabled></ease-toggle>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `checked` | `boolean` | `false` | Checked state |
-| `disabled` | `boolean` | `false` | Disabled state |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `toggle` | `{ value: boolean, event: Event }` | Fired on toggle |
-
----
-
-### Checkbox
-
-An animated checkbox with gooey effect.
-
-```html
-<ease-checkbox></ease-checkbox>
-<ease-checkbox checked></ease-checkbox>
-<ease-checkbox name="agree" value="yes"></ease-checkbox>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `checked` | `boolean` | `false` | Checked state |
-| `name` | `string \| null` | `null` | Form field name |
-| `value` | `string \| null` | `null` | Form value |
-| `disabled` | `boolean` | `false` | Disabled state |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `checkbox` | `{ value: boolean, event: Event }` | Fired on change |
-
----
-
-### Dropdown
-
-A select/dropdown component with search support.
-
-```html
-<ease-dropdown placeholder="Select option...">
-  <button slot="content" value="opt1">Option 1</button>
-  <button slot="content" value="opt2">Option 2</button>
-  <button slot="content" value="opt3">Option 3</button>
-</ease-dropdown>
-
-<!-- Searchable -->
-<ease-dropdown searchable placeholder="Search...">
-  <button slot="content" value="apple">Apple</button>
-  <button slot="content" value="banana">Banana</button>
-  <button slot="content" value="cherry">Cherry</button>
-</ease-dropdown>
-
-<!-- With sections -->
-<ease-dropdown>
-  <h4 slot="content">Fruits</h4>
-  <button slot="content" value="apple">Apple</button>
-  <hr slot="content" />
-  <h4 slot="content">Vegetables</h4>
-  <button slot="content" value="carrot">Carrot</button>
-</ease-dropdown>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `value` | `string \| null` | `null` | Selected value |
-| `placeholder` | `string \| null` | `'Select an option'` | Placeholder text |
-| `open` | `boolean` | `false` | Open state |
-| `disabled` | `boolean` | `false` | Disabled state |
-| `searchable` | `boolean` | `false` | Enable search filtering |
-| `pill` | `boolean` | `false` | Pill-shaped trigger |
-| `placement` | `Placement` | `'bottom-start'` | Dropdown placement |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `change` | `{ value: string, event: Event }` | Fired on selection |
-| `toggle` | `{ value: boolean, event: Event }` | Fired on open/close |
-| `value-change` | `{ value: string, label: string, event: Event }` | Detailed selection event |
-
----
-
-### ColorInput
-
-A color picker input with hex value display.
-
-```html
-<ease-color-input value="#FF5500"></ease-color-input>
-<ease-color-input name="primaryColor" value="#3B82F6"></ease-color-input>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `value` | `string` | `'#FF0000'` | Hex color value |
-| `disabled` | `boolean` | `false` | Disabled state |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `input` | `{ value: string, event: Event }` | Fired during color selection |
-| `change` | `{ value: string, event: Event }` | Fired when color is confirmed |
-
----
-
-### RadioGroup
-
-A radio button group using button styling.
-
-```html
-<ease-radio-group value="option1">
-  <ease-button slot="content" value="option1">Option 1</ease-button>
-  <ease-button slot="content" value="option2">Option 2</ease-button>
-  <ease-button slot="content" value="option3">Option 3</ease-button>
-</ease-radio-group>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `value` | `string \| null` | `null` | Selected value |
-
-#### Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `change` | `{ value: string, event: Event }` | Fired on selection |
-| `value-change` | `{ value: string, label: string, event: Event }` | Detailed selection event |
-
----
-
-### RadioInput
-
-An animated radio button with gooey effect.
-
-```html
-<ease-radio-input name="choice" value="a"></ease-radio-input>
-<ease-radio-input name="choice" value="b" checked></ease-radio-input>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `checked` | `boolean` | `false` | Checked state |
-| `name` | `string \| null` | `null` | Radio group name |
-| `value` | `string \| null` | `null` | Radio value |
-| `disabled` | `boolean` | `false` | Disabled state |
-
----
-
-### Field
-
-A form field layout component with label.
-
-```html
-<ease-field label="Username">
-  <ease-input name="username" placeholder="Enter username"></ease-input>
-</ease-field>
-
-<ease-field label="Volume" full-width>
-  <ease-slider name="volume" value="50"></ease-slider>
-</ease-field>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `label` | `string \| null` | `null` | Field label text |
-| `fullWidth` | `boolean` | `false` | Make content full width |
-
----
-
-### Popover
-
-A positioning component using CSS anchor positioning.
-
-```html
-<ease-popover placement="bottom-start">
-  <button slot="trigger">Open</button>
-  <div>Popover content here</div>
-</ease-popover>
-```
-
-#### Props
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `placement` | `Placement` | `'bottom-start'` | Popover placement |
-| `offset` | `number` | `8` | Distance from trigger |
-| `open` | `boolean` | `false` | Open state |
-
-#### Placement Options
+#### Tab Control
 
 ```typescript
-type Placement =
-  | 'top-start' | 'top-center' | 'top-end'
-  | 'bottom-start' | 'bottom-center' | 'bottom-end'
-  | 'left-start' | 'left-center' | 'left-end'
-  | 'right-start' | 'right-center' | 'right-end';
+const state = document.querySelector('ease-state');
+
+// Get current active tab index
+console.log(state.activeTab); // 0
+
+// Switch to a specific tab programmatically
+state.setTab(1); // Switch to second tab (0-indexed)
+
+// Or set directly via property
+state.activeTab = 2;
 ```
 
-#### CSS Variables
+### Logo Loader
 
-| Variable | Description |
-|----------|-------------|
-| `--ease-popover-offset` | Distance from anchor |
-| `--ease-popover-content-width` | Content width |
-| `--ease-popover-content-min-width` | Minimum content width |
-| `--ease-popover-content-max-width` | Maximum content width |
-
----
-
-### Tooltip
-
-A hover/focus tooltip.
+The `<ease-logo-loader>` component displays an animated logo with intro animations and an optional loading state.
 
 ```html
-<ease-tooltip>
-  <button slot="trigger">Hover me</button>
-  Tooltip content
-</ease-tooltip>
+<!-- Basic usage - plays wave intro on load -->
+<ease-logo-loader></ease-logo-loader>
 
-<ease-tooltip placement="right-center" delay="500">
-  <span slot="trigger">Info</span>
-  More information here
-</ease-tooltip>
+<!-- With particle intro animation -->
+<ease-logo-loader intro="particle"></ease-logo-loader>
+
+<!-- With loading state -->
+<ease-logo-loader loading></ease-logo-loader>
+
+<!-- Custom size -->
+<ease-logo-loader size="48"></ease-logo-loader>
 ```
 
-#### Props
+#### Logo Loader Attributes
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `open` | `boolean` | `false` | Open state |
-| `delay` | `number` | `300` | Show delay in ms |
-| `placement` | `Placement` | `'top-center'` | Tooltip placement |
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `intro` | `'wave' \| 'particle'` | `'wave'` | Intro animation variant played on mount |
+| `loading` | `boolean` | `false` | When true, plays continuous loading animation |
+| `size` | `number` | `36` | Size in pixels |
+| `aria-label` | `string` | - | Accessible label for the logo |
+
+#### Intro Animations
+
+- **Wave** (default): Inner dots appear at half scale, then expand while outer dots fade in with a staggered wave effect
+- **Particle**: Dots fly in from outside with curved bezier paths, rotation, and shockwave effects on impact
+
+#### Loading Animation
+
+When the `loading` attribute is set:
+1. Inner dots scale down and pulse with a breathing effect
+2. Outer dots animate in a circular wave pattern
+3. Animation completes its current cycle before stopping when `loading` is removed
+
+#### JavaScript API
+
+```typescript
+const logo = document.querySelector('ease-logo-loader');
+
+// Toggle loading state
+logo.loading = true;
+logo.loading = false;
+
+// Replay intro animation
+logo.playIntro();           // Uses current intro variant
+logo.playIntro('wave');     // Force wave intro
+logo.playIntro('particle'); // Force particle intro
+```
+
+#### Theming
+
+The logo uses theme color tokens:
+
+| CSS Variable | Default | Description |
+|--------------|---------|-------------|
+| `--dot-dark` | `var(--color-gray-0)` | Brightest dot color (inner dots) |
+| `--dot-medium` | `var(--color-gray-600)` | Medium dot color |
+| `--dot-light` | `var(--color-gray-700)` | Dimmest dot color (outer dots) |
+| `--dot-accent` | `var(--color-blue-600)` | Accent color for effects |
+
+### Event Handling
+
+All controls dispatch standard events:
+
+```typescript
+// Standard control-change event
+slider.addEventListener('control-change', (e: CustomEvent) => {
+  const { name, value, event } = e.detail;
+  console.log(`${name}: ${value}`);
+});
+
+// State aggregator events
+state.addEventListener('state-change', (e: CustomEvent) => {
+  const { name, value, state } = e.detail;
+  console.log('Full state:', state);
+});
+
+// Tab change event
+state.addEventListener('tab-change', (e: CustomEvent) => {
+  const { index, id, event } = e.detail;
+  console.log(`Switched to tab ${id} (index: ${index})`);
+});
+```
+
+#### Event Types
+
+| Event | Detail | Description |
+|-------|--------|-------------|
+| `control-change` | `{ name, value, event }` | Fired by individual controls when value changes |
+| `state-change` | `{ name, value, state, event }` | Fired by `<ease-state>` when any control changes |
+| `tab-change` | `{ index, id, event }` | Fired by `<ease-state>` when active tab changes |
 
 ---
 
-## Decorators
+## Configuration
 
-The package includes TypeScript decorators for building custom components.
+### initWebKit Options
 
-### @Component
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `include` | `string[]` | - | Only register these component tags |
+| `exclude` | `string[]` | - | Register all except these tags |
+| `replace` | `Record<string, Constructor \| string>` | - | Replace components with custom implementations |
+| `theme` | `string \| ThemeRef \| ThemeConfig \| ThemeModeConfig` | - | Theme to apply |
+| `target` | `HTMLElement` | `document.documentElement` | Element to scope theme vars to |
+| `styles` | `false \| 'reset' \| 'base' \| 'main'` | `false` | Inject global styles |
+| `fonts` | `false \| 'default' \| FontConfig` | `false` | Font loading configuration |
+| `lazyLoad` | `boolean \| LazyLoadConfig` | `false` | Enable lazy component loading |
+| `cspNonce` | `string` | - | CSP nonce for injected elements |
+| `dev` | `{ warnUnknownTags?: boolean; logLoads?: boolean }` | - | Development options |
 
-Defines a web component with Shadow DOM, styles, and template.
-
-```typescript
-import { Component } from '@easemate/web-kit';
-import { html } from 'lit-html';
-
-@Component({
-  tag: 'my-component',
-  styles: `
-    :host { display: block; }
-    .container { padding: 16px; }
-  `,
-  template() {
-    return html`<div class="container"><slot></slot></div>`;
-  }
-})
-class MyComponent extends HTMLElement {}
-```
-
-#### Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `tag` | `string` | Custom element tag name (required) |
-| `template` | `TemplateResult \| Function` | lit-html template |
-| `styles` | `string` | Component CSS |
-| `styleUrls` | `string[]` | External stylesheet URLs |
-| `observedAttributes` | `string[]` | Attributes to observe |
-| `shadowMode` | `'open' \| 'closed'` | Shadow DOM mode (default: 'open') |
-| `autoSlot` | `boolean` | Auto-add default slot (default: true) |
-
----
-
-### @Prop
-
-Creates a reactive property that syncs with attributes.
+### Theme Configuration
 
 ```typescript
-import { Component, Prop } from '@easemate/web-kit';
+// Theme mode configuration for light/dark switching
+interface ThemeModeConfig {
+  mode: 'light' | 'dark' | 'system';
+  light: ThemeInput;
+  dark: ThemeInput;
+  persist?: { key: string }; // Coming soon
+}
 
-@Component({ tag: 'my-counter' })
-class MyCounter extends HTMLElement {
-  @Prop<number>({ type: Number, reflect: true, defaultValue: 0 })
-  accessor count!: number;
+// Custom theme registration
+import { initWebKit, registerTheme } from '@easemate/web-kit';
 
-  @Prop<string>({ 
-    reflect: true,
-    onChange(next, previous) {
-      console.log(`Changed from ${previous} to ${next}`);
+const brandTheme = registerTheme('brand', {
+  base: 'default', // Inherit from default
+  config: {
+    typography: {
+      fontFamily: '"Inter", system-ui, sans-serif'
+    },
+    vars: {
+      '--ease-panel-radius': '16px',
+      '--ease-panel-padding': '16px'
     }
-  })
-  accessor label!: string;
+  }
+});
+
+initWebKit({ theme: brandTheme });
+```
+
+### Font Configuration
+
+```typescript
+// Use default fonts (Instrument Sans, Geist Mono)
+fonts: 'default'
+
+// Custom Google fonts
+fonts: {
+  'Inter': { source: 'google', family: 'Inter', css2: 'wght@400..700' },
+  'JetBrains Mono': { source: 'google', family: 'JetBrains Mono' }
+}
+
+// Self-hosted fonts
+fonts: {
+  'Custom Font': { source: 'css', url: '/fonts/custom.css' }
 }
 ```
 
-#### Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `type` | `Constructor` | Type for parsing (Boolean, Number, String, Object, Array) |
-| `attribute` | `string` | Custom attribute name |
-| `reflect` | `boolean` | Sync property to attribute (default: true) |
-| `defaultValue` | `T \| () => T` | Default value |
-| `parse` | `(value: string) => T` | Custom parser |
-| `format` | `(value: T) => string` | Custom formatter |
-| `compare` | `(a: T, b: T) => boolean` | Custom equality check |
-| `onChange` | `(next: T, prev: T) => void` | Change callback |
-
----
-
-### @Listen
-
-Adds event listeners with delegation support.
+### Lazy Loading
 
 ```typescript
-import { Component, Listen } from '@easemate/web-kit';
+initWebKit({
+  lazyLoad: true, // Auto-define components when they appear in DOM
+  theme: 'default'
+});
 
-@Component({ tag: 'my-form' })
-class MyForm extends HTMLElement {
-  @Listen('click', { selector: 'button' })
-  handleButtonClick(event: MouseEvent, button: HTMLButtonElement) {
-    console.log('Button clicked:', button);
+// Advanced lazy loading
+initWebKit({
+  lazyLoad: {
+    strategy: 'mutation',
+    include: ['ease-slider', 'ease-toggle'],
+    preload: ['ease-button'] // Load immediately
   }
-
-  @Listen('input', { target: 'document' })
-  handleGlobalInput(event: InputEvent) {
-    // Listen on document
-  }
-
-  @Listen('resize', { target: 'window' })
-  handleResize(event: UIEvent) {
-    // Listen on window
-  }
-}
+});
 ```
 
-#### Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `selector` | `string` | Delegate to matching elements |
-| `target` | `'shadow' \| 'light' \| 'document' \| 'window'` | Event target |
-| `prevent` | `boolean` | Call preventDefault() |
-| `stop` | `boolean` | Call stopPropagation() |
-| `stopImmediate` | `boolean` | Call stopImmediatePropagation() |
-| `once` | `boolean` | Remove after first call |
-| `passive` | `boolean` | Passive listener |
-| `capture` | `boolean` | Capture phase |
-| `when` | `(event, matched) => boolean` | Conditional filter |
-
----
-
-### @Query
-
-Query DOM elements in shadow or light DOM.
+### Component Replacement
 
 ```typescript
-import { Component, Query } from '@easemate/web-kit';
+import { initWebKit } from '@easemate/web-kit';
+import { CustomInput } from './custom-input';
 
-@Component({ tag: 'my-component' })
-class MyComponent extends HTMLElement {
-  @Query<HTMLInputElement>('input')
-  accessor input!: HTMLInputElement | null;
-
-  @Query<HTMLElement[]>('.item', { all: true })
-  accessor items!: HTMLElement[];
-
-  @Query<HTMLElement>('.container', { from: 'light' })
-  accessor container!: HTMLElement | null;
-
-  @Query<HTMLFormElement>('form', { closest: true })
-  accessor form!: HTMLFormElement | null;
-}
-```
-
-#### Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `from` | `'shadow' \| 'light' \| 'document'` | Query root |
-| `all` | `boolean` | Return all matches as array |
-| `closest` | `boolean` | Use Element.closest() |
-| `fallback` | `T \| () => T` | Fallback value |
-
----
-
-### @Watch
-
-Creates a reactive accessor that triggers re-render on change.
-
-```typescript
-import { Component, Watch } from '@easemate/web-kit';
-
-@Component({ tag: 'my-component' })
-class MyComponent extends HTMLElement {
-  @Watch<number>({
-    onChange(next, previous) {
-      console.log(`Count: ${previous} -> ${next}`);
-    }
-  })
-  accessor internalCount = 0;
-}
-```
-
----
-
-### @OutsideClick
-
-Handle clicks outside an element.
-
-```typescript
-import { Component, OutsideClick, Prop } from '@easemate/web-kit';
-
-@Component({ tag: 'my-dropdown' })
-class MyDropdown extends HTMLElement {
-  @Prop<boolean>({ type: Boolean })
-  accessor open = false;
-
-  @OutsideClick({
-    content: (host) => host.shadowRoot?.querySelector('.panel'),
-    triggers: (host) => [host.shadowRoot?.querySelector('.trigger')],
-    disabled: (host) => !host.open
-  })
-  handleOutsideClick() {
-    this.open = false;
-  }
-}
+initWebKit({
+  replace: {
+    'ease-input': CustomInput, // Your custom element class
+    // or alias to another tag:
+    // 'ease-input': 'my-custom-input'
+  },
+  theme: 'default'
+});
 ```
 
 ---
 
 ## Theming
 
-The package uses CSS custom properties for theming, with a JavaScript API for runtime customization.
+### CSS Custom Properties
 
-### CSS Variables
-
-Include the base styles in your HTML:
-
-```html
-<link rel="stylesheet" href="@easemate/web-kit/styles/vars.css">
-```
-
-Or import in JavaScript:
-
-```javascript
-import '@easemate/web-kit/styles/vars.css';
-```
-
-### Color Palette
-
-The default theme includes these color scales (using oklab for perceptual uniformity):
-
-- **Gray**: 0, 100, 300, 400, 500, 600, 700, 800, 825, 850, 875, 900, 1000
-- **Blue**: 100-1100
-- **Green**: 100-1000
-- **Red**: 100-1000
-- **Orange**: 100-1000
-- **Yellow**: 100-800
+All components use CSS custom properties. Override them at any scope:
 
 ```css
-/* Example usage */
-.my-element {
-  background: var(--color-gray-900);
-  color: var(--color-blue-100);
-  border: 1px solid var(--color-white-10);
+:root {
+  --ease-panel-padding: 16px;
+  --ease-panel-radius: 14px;
+  --ease-button-radius: 8px;
+}
+
+/* Or scope to specific containers */
+.my-panel {
+  --ease-panel-background: var(--my-bg);
 }
 ```
 
-### Runtime Theming API
-
-```typescript
-import { 
-  defineTheme, 
-  createTheme, 
-  getThemeValue, 
-  setThemeValue,
-  mergeTheme,
-  createDarkTheme,
-  createLightTheme 
-} from '@easemate/web-kit';
-
-// Apply theme to document root
-defineTheme({
-  colors: {
-    blue: {
-      500: '#3B82F6',
-      600: '#2563EB'
-    }
-  },
-  radii: {
-    md: '12px'
-  }
-});
-
-// Apply to specific element
-defineTheme({ colors: { foreground: '#fff' } }, myElement);
-
-// Generate CSS string (for SSR or style injection)
-const css = createTheme({
-  colors: {
-    gray: { 900: '#111827' }
-  }
-}, '.dark-theme');
-// Returns: '.dark-theme { --color-gray-900: #111827; }'
-
-// Read current value
-const blueColor = getThemeValue('color-blue-500');
-
-// Set single value
-setThemeValue('color-blue-500', '#60A5FA');
-
-// Create merged theme with defaults
-const customTheme = mergeTheme({
-  colors: {
-    blue: { 500: '#custom' }
-  }
-});
-
-// Built-in dark/light theme helpers
-defineTheme(createDarkTheme());
-defineTheme(createLightTheme());
-```
-
-### Theme Configuration Types
-
-```typescript
-interface ThemeConfig {
-  colors?: ColorPalette;
-  radii?: RadiiConfig;
-  spacing?: SpacingConfig;
-  typography?: TypographyConfig;
-}
-
-interface ColorPalette {
-  gray?: GrayScale;
-  blue?: ColorScale;
-  green?: ColorScale;
-  red?: ColorScale;
-  orange?: ColorScale;
-  yellow?: ColorScale;
-  white?: string;
-  black?: string;
-  whiteAlpha?: AlphaColors;
-  blackAlpha?: AlphaColors;
-  foreground?: string;
-}
-
-interface RadiiConfig {
-  sm?: string;  // 4px
-  md?: string;  // 8px
-  lg?: string;  // 12px
-  xl?: string;  // 16px
-  full?: string; // 9999px
-}
-```
-
----
-
-## Icons
-
-The package includes a set of SVG icons as web components:
-
-### Animation Icons
-
-- `<ease-icon-chevron state="up|down|left|right">` - Animated chevron
-- `<ease-icon-loading>` - Loading spinner
-
-### Interface Icons
-
-- `<ease-icon-arrow-up>`
-- `<ease-icon-check>`
-- `<ease-icon-circle-arrow-left>`
-- `<ease-icon-circle-arrow-right>`
-- `<ease-icon-code>`
-- `<ease-icon-dots>`
-- `<ease-icon-mention>`
-- `<ease-icon-minus>`
-- `<ease-icon-plus>`
-- `<ease-icon-settings>`
-
-```html
-<ease-button block="icon">
-  <ease-icon-settings />
-</ease-button>
-```
-
-### Icon Sizing
+Multiple themes using `data-ease-theme`:
 
 ```css
-/* Icons inherit size from CSS variable */
-.my-container {
-  --ease-icon-size: 24px;
+:root[data-ease-theme='dark'] {
+  --ease-panel-background: var(--color-gray-1000);
+}
+
+:root[data-ease-theme='light'] {
+  --ease-panel-background: white;
+}
+```
+
+### JavaScript Theme API
+
+```typescript
+import { applyTheme, createTheme, mergeTheme, setThemeName } from '@easemate/web-kit/theme';
+
+// Merge with defaults
+const theme = mergeTheme({
+  vars: { '--ease-panel-padding': '16px' }
+});
+
+// Apply to document
+applyTheme(theme, { name: 'custom', colorScheme: 'dark' });
+
+// Generate CSS string
+const css = createTheme(theme, ':root[data-ease-theme="custom"]');
+
+// Switch theme name
+setThemeName('light', { colorScheme: 'light' });
+```
+
+### Token Reference
+
+#### Global Tokens
+
+| Category | Variables |
+|----------|-----------|
+| Colors | `--color-gray-*`, `--color-blue-*`, `--color-green-*`, `--color-red-*`, `--color-orange-*`, `--color-yellow-*` |
+| Radii | `--radii-sm`, `--radii-md`, `--radii-lg`, `--radii-xl`, `--radii-full` |
+| Spacing | `--spacing-xs`, `--spacing-sm`, `--spacing-md`, `--spacing-lg`, `--spacing-xl` |
+| Typography | `--font-family`, `--font-mono`, `--font-size`, `--font-line-height` |
+
+#### UI Kit Tokens (`--ease-*`)
+
+| Category | Variables |
+|----------|-----------|
+| Typography | `--ease-font-family`, `--ease-font-mono`, `--ease-font-size`, `--ease-line-height` |
+| Panel | `--ease-panel-max-width`, `--ease-panel-padding`, `--ease-panel-radius`, `--ease-panel-background`, `--ease-panel-border-color`, `--ease-panel-shadow` |
+| Panel Title | `--ease-panel-title-font-size`, `--ease-panel-title-font-weight`, `--ease-panel-title-line-height`, `--ease-panel-title-color` |
+| Panel Tabs | `--ease-panel-tab-font-size`, `--ease-panel-tab-font-weight`, `--ease-panel-tab-line-height`, `--ease-panel-tab-color`, `--ease-panel-tab-color-hover`, `--ease-panel-tab-color-active`, `--ease-panel-tab-background-active`, `--ease-panel-tab-radius` |
+| Panel Actions | `--ease-panel-action-icon-size` |
+| Panel Footer | `--ease-panel-footer-padding` |
+| State Transitions | `--ease-state-transition-duration`, `--ease-state-transition-easing` |
+| Field | `--ease-field-label-width`, `--ease-field-column-gap`, `--ease-field-row-gap` |
+| Controls | Each control exposes `--ease-<component>-*` tokens |
+
+---
+
+## API Reference
+
+### Controller API
+
+`initWebKit()` returns a controller object:
+
+```typescript
+interface WebKitController {
+  dispose: () => void;           // Cleanup all injected resources
+  ready: Promise<void>;          // Resolves when components are loaded
+  theme?: {
+    set: (theme) => void;        // Set theme by name/ref/config
+    mode?: (mode) => void;       // Set mode (light/dark/system)
+  };
+}
+```
+
+### Package Exports
+
+| Export | Description |
+|--------|-------------|
+| `@easemate/web-kit` | Main entry (initWebKit + theme + types) |
+| `@easemate/web-kit/register` | Side-effect registration (all components) |
+| `@easemate/web-kit/elements` | UI components only |
+| `@easemate/web-kit/decorators` | Component decorators |
+| `@easemate/web-kit/theme` | Theming utilities |
+| `@easemate/web-kit/utils` | Utility functions |
+| `@easemate/web-kit/styles/*` | CSS assets (optional) |
+
+### State Panel API
+
+The `<ease-state>` component provides a complete API for state management.
+
+#### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `value` | `string \| null` | `null` | Legacy: reflects the last changed control's value |
+| `activeTab` | `number` | `0` | Zero-based index of the active tab |
+| `state` | `Record<string, unknown>` | `{}` | Read-only object containing all control values |
+
+#### Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `get` | `(name: string) => unknown` | Get a specific control value by name |
+| `set` | `(name: string, value: unknown) => void` | Set a control value programmatically |
+| `subscribe` | `(callback: (value, name) => void) => { unsubscribe }` | Subscribe to all state changes |
+| `subscribe` | `(name: string, callback: (value, name) => void) => { unsubscribe }` | Subscribe to a specific control |
+| `reset` | `() => void` | Reset all controls to their initial values |
+| `setTab` | `(index: number) => void` | Switch to a specific tab by index |
+
+#### Slots
+
+| Slot | Description |
+|------|-------------|
+| `headline` | Panel title text (hidden when tabs are present) |
+| `actions` | Header action buttons, links, or dropdowns |
+| `entry` | Main content area (used when no tabs) |
+| `tab-{id}` | Tab panel content (use `data-tab-label` for display name) |
+| `footer` | Footer content below all panels |
+
+#### CSS Parts
+
+| Part | Description |
+|------|-------------|
+| `section` | Outer container |
+| `header` | Header row containing headline/tabs and actions |
+| `headline` | Title element |
+| `tabs` | Tab button container |
+| `tab` | Individual tab button |
+| `actions` | Actions container |
+| `content` | Content wrapper (handles height animations) |
+| `form` | Inner form container |
+| `tab-panel` | Individual tab panel |
+| `footer` | Footer container |
+
+#### Events
+
+| Event | Detail Type | Description |
+|-------|-------------|-------------|
+| `state-change` | `StateChangeEventDetail` | Fired when any control value changes |
+| `tab-change` | `TabChangeEventDetail` | Fired when the active tab changes |
+
+```typescript
+interface StateChangeEventDetail {
+  name: string;              // Control name
+  value: unknown;            // New value
+  state: Record<string, unknown>; // Complete state object
+  event: Event;              // Original event
+}
+
+interface TabChangeEventDetail {
+  index: number;             // Tab index (0-based)
+  id: string;                // Tab id from slot name
+  event: Event;              // Original event
 }
 ```
 
 ---
 
-## TypeScript
+## Accessibility
 
-All components and utilities are fully typed:
-
-```typescript
-import type { 
-  StateData, 
-  StateChangeDetail,
-  Placement,
-  ThemeConfig,
-  ColorPalette,
-  ControlEventDetail
-} from '@easemate/web-kit';
-
-// Type-safe state access
-const controls = document.querySelector('ease-state') as State;
-const speed = controls.get<number>('speed');
-
-// Typed event handler
-controls.addEventListener('state-change', (e: CustomEvent<StateChangeDetail>) => {
-  const { data, key, value } = e.detail;
-});
-```
+Components include:
+- ARIA attributes (`role`, `aria-*`)
+- Keyboard navigation (Tab, Arrow keys, Enter, Escape)
+- Focus management
+- Screen reader support
+- `disabled` state handling
 
 ---
 
-## Browser Support
+## SSR Support
 
-This package requires modern browser features:
+The package is SSR-safe. `initWebKit()` is a no-op in server environments:
 
-- **CSS Anchor Positioning** - For popover/tooltip positioning
-- **Container Queries** - For responsive components
-- **CSS Custom Properties** - For theming
-- **Shadow DOM** - For component encapsulation
-- **ES2022+** - For decorators and class fields
+```typescript
+import { initWebKit } from '@easemate/web-kit';
 
-### Supported Browsers
-
-- Chrome/Edge 125+
-- Safari 18+
-- Firefox 128+ (with flags for anchor positioning)
-
-### Polyfills
-
-For older browsers, you may need polyfills for:
-- CSS Anchor Positioning: [CSS Anchor Positioning Polyfill](https://github.com/nicell/css-anchor-positioning-polyfill)
-- Custom Elements: [@webcomponents/webcomponentsjs](https://github.com/webcomponents/polyfills)
+// Safe on server - returns immediately without side effects
+const kit = initWebKit({ theme: 'default' });
+await kit.ready; // Resolves immediately on server
+```
 
 ---
 
 ## License
 
-MIT © Aaron Iker
+MIT © [Aaron Iker](https://github.com/aaroniker)

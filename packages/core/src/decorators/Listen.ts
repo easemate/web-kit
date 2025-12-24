@@ -156,7 +156,13 @@ export function Listen<THost extends ListenHost, TEvent extends Event = Event, T
     context: ClassMethodDecoratorContext<THost, typeof originalMethod>
   ): void => {
     context.addInitializer(function (this: THost) {
+      let attached = false;
+
       const attach = () => {
+        if (attached) {
+          return;
+        }
+
         const target = resolveTarget(this, listenConfig.target);
 
         if (!target || typeof (target as EventTarget).addEventListener !== 'function') {
@@ -212,17 +218,22 @@ export function Listen<THost extends ListenHost, TEvent extends Event = Event, T
         };
 
         target.addEventListener(eventName as string, handler, eventOptions);
+        attached = true;
 
         registerCleanup(this, () => {
           target.removeEventListener(eventName as string, handler, eventOptions);
+          attached = false;
         });
       };
 
-      addLifecycleHook(this, 'connectedCallback', attach);
+      // IMPORTANT:
+      // Many components are created inside templates/shadow DOM. At construction time they are often not connected yet,
+      // and patching instance lifecycle callbacks is not reliably invoked by the platform.
+      // Attach the listener ASAP (microtask) so it works for nested components as well.
+      queueMicrotask(attach);
 
-      if (this.isConnected) {
-        attach();
-      }
+      // Best-effort attach on connect too (idempotent).
+      addLifecycleHook(this, 'connectedCallback', attach);
     });
   };
 }

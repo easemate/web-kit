@@ -1,0 +1,61 @@
+html,
+body {
+  background-color: var(--color-gray-1000);
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+}
+
+main {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(332px, 1fr));
+  gap: 5dvw;
+  align-items: start;
+}
+
+/* Logo Demo Section */
+.logo-demo {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 32px;
+  background: var(--color-gray-900);
+  border-radius: var(--radii-lg);
+  margin-bottom: 24px;
+}
+
+.logo-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.logo-controls button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radii-md);
+  background: var(--color-gray-800);
+  color: var(--color-gray-100);
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.logo-controls button:hover {
+  background: var(--color-gray-700);
+}
+
+.logo-controls button:active {
+  transform: scale(0.97);
+}

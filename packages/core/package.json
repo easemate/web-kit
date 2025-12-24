@@ -1,12 +1,16 @@
 {
   "name": "@easemate/web-kit",
   "version": "0.1.0",
-  "description": "Web components for easemate",
+  "description": "Web components for easemate - a UI kit for animation libraries",
   "type": "module",
   "files": [
     "build"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./build/register.js",
+    "./build/register.cjs",
+    "./build/styles/**/*.css"
+  ],
   "scripts": {
     "clean": "rm -rf build",
     "build": "npm run clean && zshy",
@@ -16,14 +20,17 @@
     "lint:fix": "biome check src test --write",
     "format": "biome format src test",
     "format:fix": "biome format src test --write",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "dev": "zshy --watch",
+    "typecheck": "tsc --noEmit",
     "prepare": "zshy"
   },
   "keywords": [
     "ui",
     "web-components",
-    "typescript"
+    "typescript",
+    "animation",
+    "controls",
+    "leva",
+    "lil-gui"
   ],
   "author": "Aaron Iker",
   "license": "MIT",
@@ -36,11 +43,19 @@
   },
   "homepage": "https://github.com/easemate/web-kit#readme",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
+  },
+  "dependencies": {
+    "lit-html": "^3.2.1"
   },
   "zshy": {
     "exports": {
-      ".": "./src/index.ts"
+      ".": "./src/index.ts",
+      "./elements": "./src/elements/index.ts",
+      "./decorators": "./src/decorators/index.ts",
+      "./utils": "./src/utils/index.ts",
+      "./theme": "./src/theme/index.ts",
+      "./register": "./src/register.ts"
     }
   },
   "exports": {
@@ -48,6 +63,31 @@
       "types": "./build/index.d.cts",
       "import": "./build/index.js",
       "require": "./build/index.cjs"
+    },
+    "./elements": {
+      "types": "./build/elements/index.d.cts",
+      "import": "./build/elements/index.js",
+      "require": "./build/elements/index.cjs"
+    },
+    "./decorators": {
+      "types": "./build/decorators/index.d.cts",
+      "import": "./build/decorators/index.js",
+      "require": "./build/decorators/index.cjs"
+    },
+    "./utils": {
+      "types": "./build/utils/index.d.cts",
+      "import": "./build/utils/index.js",
+      "require": "./build/utils/index.cjs"
+    },
+    "./theme": {
+      "types": "./build/theme/index.d.cts",
+      "import": "./build/theme/index.js",
+      "require": "./build/theme/index.cjs"
+    },
+    "./register": {
+      "types": "./build/register.d.cts",
+      "import": "./build/register.js",
+      "require": "./build/register.cjs"
     }
   },
   "main": "./build/index.cjs",

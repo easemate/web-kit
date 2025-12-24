@@ -1,7 +1,3 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
 
 import { dispatchControlEvent } from '../shared';
@@ -18,7 +14,12 @@ import {
   updateHsvFromComponents
 } from './utils';
 
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 import { styleMap } from '~/utils/template-helpers';
+import '../icons/interface/arrows-vertical';
+import '../icons/interface/picker';
 
 @Component({
   tag: 'ease-color-picker',
@@ -124,17 +125,21 @@ import { styleMap } from '~/utils/template-helpers';
     [part="format-inputs"] {
       padding: 2px 4px;
       width: 100%;
-      border-radius: var(--radii-md);
-      background-color: var(--color-gray-850);
+      border-radius: var(--ease-color-picker-format-radius, var(--radii-md));
+      background-color: var(--ease-color-picker-format-background, var(--color-gray-850));
       cursor: pointer;
-      box-shadow: inset 0 1px .25px 0 var(--color-white-4), 0 1px 2.5px 0 var(--color-black-8);
+      box-shadow: var(
+        --ease-color-picker-format-shadow,
+        inset 0 1px 0.25px 0 var(--color-white-4),
+        0 1px 2.5px 0 var(--color-black-8)
+      );
       box-sizing: border-box;
       display: flex;
       justify-content: space-around;
 
       &:hover,
       &:focus-within {
-        background-color: var(--color-gray-825);
+        background-color: var(--ease-color-picker-format-background-hover, var(--color-gray-825));
       }
     }
 
@@ -143,7 +148,7 @@ import { styleMap } from '~/utils/template-helpers';
       -moz-appearance: textfield;
       cursor: pointer;
       box-sizing: border-box;
-      font-size: 11px;
+      font-size: var(--ease-color-picker-format-font-size, 11px);
       font-weight: 500;
       color: var(--color-gray-600);
       min-width: 0;
@@ -158,7 +163,7 @@ import { styleMap } from '~/utils/template-helpers';
       width: 100%;
       text-align: center;
       font-optical-sizing: auto;
-      font-family: 'Geist Mono', monospace;
+      font-family: var(--ease-font-mono, 'Geist Mono', monospace);
 
       &:hover,
       &:focus-within {
@@ -185,14 +190,14 @@ import { styleMap } from '~/utils/template-helpers';
     }
 
     [part="format-trigger"] {
-      --ease-icon-size: 10px;
+      --ease-icon-size: var(--ease-color-picker-format-icon-size, 10px);
 
       display: flex;
       align-items: center;
       gap: 2px;
-      font-family: 'Geist Mono', monospace;
+      font-family: var(--ease-font-mono, 'Geist Mono', monospace);
       font-optical-sizing: auto;
-      font-size: 10px;
+      font-size: var(--ease-color-picker-format-trigger-font-size, 10px);
       font-weight: 500;
       color: var(--color-gray-400);
       cursor: pointer;
@@ -345,7 +350,7 @@ export class ColorPicker extends HTMLElement {
   private hsv: HSV = { h: 0, s: 1, v: 1 };
   private originalValue: string = '#FF0000';
   private format: ColorFormat = 'hex';
-  private formatAnimating: 'out' | 'in' | 'none' = 'none';
+  formatAnimating: 'out' | 'in' | 'none' = 'none';
   #isDraggingSaturation = false;
   #isDraggingHue = false;
   #activeSaturationPointer: number | null = null;

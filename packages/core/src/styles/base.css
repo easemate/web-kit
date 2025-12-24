@@ -1,0 +1,13 @@
+/**
+ * @easemate/web-kit - Base Theme
+ *
+ * Import this file to apply the default token set (dark baseline).
+ *
+ * For multiple themes (dark/light/custom), scope your own overrides with
+ * `[data-ease-theme="<name>"]` and/or use the JS theme API.
+ *
+ * @example
+ * import '@easemate/web-kit/styles/base.css';
+ */
+
+@import url('./vars.css');

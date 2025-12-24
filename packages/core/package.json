@@ -1,6 +1,6 @@
 {
   "name": "@easemate/web-kit",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "UI kit of web components for easemate - a typescript animation library",
   "type": "module",
   "files": [
@@ -21,7 +21,7 @@
     "format": "biome format src test",
     "format:fix": "biome format src test --write",
     "typecheck": "tsc --noEmit",
-    "prepare": "zshy"
+    "prepare": "zshy && tsc-alias -p tsconfig.json"
   },
   "keywords": [
     "ui",

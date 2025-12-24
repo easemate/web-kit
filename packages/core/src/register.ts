@@ -8,6 +8,10 @@
  * ```
  */
 
+// JSX type augmentation - export a non-empty type to force TS to include the module
+// This ensures JSX types are available when this module is imported
+export type { EaseElements as WebKitJSXElements } from './react/jsx';
+
 // Elements (side-effects - each imports and registers its custom element)
 import './elements/button';
 import './elements/checkbox';

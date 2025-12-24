@@ -1,6 +1,6 @@
 {
   "name": "@easemate/web-kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "UI kit of web components for easemate - a typescript animation library",
   "type": "module",
   "files": [
@@ -9,11 +9,17 @@
   "sideEffects": [
     "./build/register.js",
     "./build/register.cjs",
+    "./build/register.server.js",
+    "./build/register.server.cjs",
+    "./build/react.js",
+    "./build/react.cjs",
+    "./build/jsx.js",
+    "./build/jsx.cjs",
     "./build/styles/**/*.css"
   ],
   "scripts": {
     "clean": "rm -rf build",
-    "build": "npm run clean && zshy && tsc-alias -p tsconfig.json",
+    "build": "npm run clean && tsup",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check src test",
@@ -21,7 +27,7 @@
     "format": "biome format src test",
     "format:fix": "biome format src test --write",
     "typecheck": "tsc --noEmit",
-    "prepare": "zshy && tsc-alias -p tsconfig.json"
+    "prepare": "tsup"
   },
   "keywords": [
     "ui",
@@ -48,50 +54,54 @@
   "dependencies": {
     "lit-html": "^3.2.1"
   },
-  "zshy": {
-    "exports": {
-      ".": "./src/index.ts",
-      "./elements": "./src/elements/index.ts",
-      "./decorators": "./src/decorators/index.ts",
-      "./utils": "./src/utils/index.ts",
-      "./theme": "./src/theme/index.ts",
-      "./react": "./src/react/index.ts",
-      "./register": "./src/register.ts"
-    }
-  },
   "exports": {
     ".": {
-      "types": "./build/index.d.cts",
+      "types": "./build/index.d.ts",
       "import": "./build/index.js",
       "require": "./build/index.cjs"
     },
     "./elements": {
-      "types": "./build/elements/index.d.cts",
-      "import": "./build/elements/index.js",
-      "require": "./build/elements/index.cjs"
+      "types": "./build/elements.d.ts",
+      "import": "./build/elements.js",
+      "require": "./build/elements.cjs"
     },
     "./decorators": {
-      "types": "./build/decorators/index.d.cts",
-      "import": "./build/decorators/index.js",
-      "require": "./build/decorators/index.cjs"
+      "types": "./build/decorators.d.ts",
+      "import": "./build/decorators.js",
+      "require": "./build/decorators.cjs"
     },
     "./utils": {
-      "types": "./build/utils/index.d.cts",
-      "import": "./build/utils/index.js",
-      "require": "./build/utils/index.cjs"
+      "types": "./build/utils.d.ts",
+      "import": "./build/utils.js",
+      "require": "./build/utils.cjs"
     },
     "./theme": {
-      "types": "./build/theme/index.d.cts",
-      "import": "./build/theme/index.js",
-      "require": "./build/theme/index.cjs"
+      "types": "./build/theme.d.ts",
+      "import": "./build/theme.js",
+      "require": "./build/theme.cjs"
     },
     "./react": {
-      "types": "./build/react/index.d.cts",
-      "import": "./build/react/index.js",
-      "require": "./build/react/index.cjs"
+      "types": "./build/react.d.ts",
+      "import": "./build/react.js",
+      "require": "./build/react.cjs"
+    },
+    "./react/jsx": {
+      "types": "./build/jsx.d.ts",
+      "import": "./build/jsx.js",
+      "require": "./build/jsx.cjs"
     },
     "./register": {
-      "types": "./build/register.d.cts",
+      "types": "./build/register.d.ts",
+      "react-server": {
+        "types": "./build/register.server.d.ts",
+        "import": "./build/register.server.js",
+        "require": "./build/register.server.cjs"
+      },
+      "node": {
+        "types": "./build/register.server.d.ts",
+        "import": "./build/register.server.js",
+        "require": "./build/register.server.cjs"
+      },
       "import": "./build/register.js",
       "require": "./build/register.cjs"
     }
@@ -105,9 +115,13 @@
     }
   },
   "main": "./build/index.cjs",
-  "types": "./build/index.d.cts",
+  "types": "./build/index.d.ts",
   "module": "./build/index.js",
   "devDependencies": {
-    "tsc-alias": "^1.8.16"
+    "@swc/core": "^1.10.1",
+    "@types/react": "^19.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.0",
+    "unplugin-swc": "^1.5.1"
   }
 }

@@ -1,3 +1,7 @@
+// JSX type augmentation - export a non-empty type to force TS to include the module
+// This ensures JSX types are available when the package is imported (no consumer .d.ts needed)
+export type { EaseElements as WebKitJSXElements } from './react/jsx';
+
 // Components
 export * from './components';
 // Decorators

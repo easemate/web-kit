@@ -18,13 +18,9 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
         run: npm install
-      - name: Format code
-        run: npx biome check --write .
       - name: Lint packages
         run: npm run lint
       - name: Build packages
-        run: npm run build:packages
-      - name: Build playground
-        run: npm run build:playground
+        run: npm run build
       - name: Run tests
-        run: npm test
+        run: npm run test

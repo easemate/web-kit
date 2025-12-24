@@ -1,7 +1,7 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-
 import { html, type TemplateResult } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
 
 type ChevronState = 'down' | 'up';
 type ChevronPath = Record<ChevronState, string>;
@@ -26,7 +26,7 @@ type ChevronPath = Record<ChevronState, string>;
   `,
   observedAttributes: ['state']
 })
-export class Chevron extends HTMLElement {
+export class IconChevron extends HTMLElement {
   declare requestRender: () => void;
 
   accessor paths: ChevronPath = {
@@ -42,7 +42,10 @@ export class Chevron extends HTMLElement {
       this.shadowRoot
         ?.querySelector<SVGPathElement>('path')
         ?.animate(
-          [{ d: `path('${(this as Chevron).paths[previous]}')` }, { d: `path('${(this as Chevron).paths[next]}')` }],
+          [
+            { d: `path('${(this as IconChevron).paths[previous]}')` },
+            { d: `path('${(this as IconChevron).paths[next]}')` }
+          ],
           {
             duration: 200,
             easing: 'cubic-bezier(0.25, 0, 0.5, 1)'

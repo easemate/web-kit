@@ -1,6 +1,6 @@
-import { Component } from '@/Component';
-
 import { html } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
 
 @Component({
   tag: 'ease-icon-picker',
@@ -28,6 +28,6 @@ import { html } from 'lit-html';
     `;
   }
 })
-export class Picker extends HTMLElement {
+export class IconPicker extends HTMLElement {
   declare requestRender: () => void;
 }

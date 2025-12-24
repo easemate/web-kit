@@ -1,6 +1,6 @@
 {
   "name": "@easemate/web-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Web components for easemate - a UI kit for animation libraries",
   "type": "module",
   "files": [

@@ -28,6 +28,16 @@ jobs:
 
       - name: Build packages
         run: npm run clean && npm run build -- --force
+        env:
+          TURBO_FORCE: true
+
+      - name: Verify build output (no unresolved aliases)
+        run: |
+          if grep -r "from '~/" packages/core/build --include="*.js" --include="*.cjs"; then
+            echo "ERROR: Found unresolved ~/ aliases in build output!"
+            exit 1
+          fi
+          echo "Build output verified - no unresolved aliases"
 
       - name: Publish to NPM
         run: npm publish --workspaces --access public

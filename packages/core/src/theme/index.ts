@@ -7,9 +7,12 @@ import {
   type RadiiConfig,
   type SpacingConfig,
   type ThemeConfig,
+  type ThemeVars,
   type TypographyConfig
 } from './tokens';
 
+export * from './presets';
+export * from './registry';
 export * from './tokens';
 
 /**
@@ -45,6 +48,34 @@ const generateColorScaleVars = (
 };
 
 /**
+ * Add alpha to an OKLab/OKLCH color string.
+ * Falls back to `color-mix()` for non-oklab/oklch formats.
+ */
+const withAlpha = (color: string, alpha: number): string => {
+  const trimmed = color.trim();
+  const match = /^(oklab|oklch)\((.+)\)$/.exec(trimmed);
+  if (match) {
+    const fn = match[1];
+    const innerRaw = match[2];
+
+    if (fn && innerRaw) {
+      const inner = innerRaw.trim();
+
+      // If the color already has an alpha, keep it as-is.
+      if (inner.includes('/')) {
+        return `${fn}(${inner})`;
+      }
+
+      return `${fn}(${inner} / ${alpha})`;
+    }
+  }
+
+  // Fallback: approximate alpha using color-mix
+  const pct = Math.round(alpha * 1000) / 10;
+  return `color-mix(in oklab, ${trimmed} ${pct}%, transparent)`;
+};
+
+/**
  * Generate CSS variables from a color palette
  */
 const generateColorVars = (colors: ColorPalette): Record<string, string> => {
@@ -56,6 +87,15 @@ const generateColorVars = (colors: ColorPalette): Record<string, string> => {
 
   if (colors.blue) {
     Object.assign(vars, generateColorScaleVars('blue', colors.blue));
+  }
+
+  // Derived convenience tokens used by some components
+  const blue = colors.blue as Record<string, string | undefined> | undefined;
+  if (blue?.['200']) {
+    vars[toVarName(CSS_PREFIX, 'blue', '100-50')] = withAlpha(blue['200'], 0.5);
+  }
+  if (blue?.['300']) {
+    vars[toVarName(CSS_PREFIX, 'blue', '300-40')] = withAlpha(blue['300'], 0.4);
   }
 
   if (colors.green) {
@@ -90,6 +130,11 @@ const generateColorVars = (colors: ColorPalette): Record<string, string> => {
     }
   }
 
+  // Ensure `--color-white-0` exists (used by slider thumb gradients)
+  if (!vars[toVarName(CSS_PREFIX, 'white', 0)] && colors.white) {
+    vars[toVarName(CSS_PREFIX, 'white', 0)] = withAlpha(colors.white, 0);
+  }
+
   if (colors.blackAlpha) {
     for (const [level, value] of Object.entries(colors.blackAlpha)) {
       if (value !== undefined) {
@@ -103,6 +148,20 @@ const generateColorVars = (colors: ColorPalette): Record<string, string> => {
   }
 
   return vars;
+};
+
+/**
+ * Resolve the theme target element.
+ * This keeps the theme API SSR-safe (no-ops when `document` is not available).
+ */
+const resolveThemeTarget = (element?: HTMLElement | null): HTMLElement | null => {
+  if (element) {
+    return element;
+  }
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  return document.documentElement;
 };
 
 /**
@@ -160,6 +219,33 @@ const generateTypographyVars = (typography: TypographyConfig): Record<string, st
   return vars;
 };
 
+const normalizeCustomVarName = (name: string): string | null => {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return trimmed.startsWith('--') ? trimmed : `--${trimmed}`;
+};
+
+const generateCustomVars = (vars: ThemeVars): Record<string, string> => {
+  const out: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(vars)) {
+    if (value === null || value === undefined) {
+      continue;
+    }
+
+    const name = normalizeCustomVarName(key);
+    if (!name) {
+      continue;
+    }
+
+    out[name] = String(value);
+  }
+
+  return out;
+};
+
 /**
  * Generate all CSS variables from a theme config
  */
@@ -180,6 +266,10 @@ const generateThemeVars = (config: ThemeConfig): Record<string, string> => {
 
   if (config.typography) {
     Object.assign(vars, generateTypographyVars(config.typography));
+  }
+
+  if (config.vars) {
+    Object.assign(vars, generateCustomVars(config.vars));
   }
 
   return vars;
@@ -230,11 +320,16 @@ export const createTheme = (config: ThemeConfig, selector = ':root'): string => 
  * defineTheme({ colors: { gray: { 900: '#111' } } }, myElement);
  * ```
  */
-export const defineTheme = (config: ThemeConfig, element: HTMLElement = document.documentElement): void => {
+export const defineTheme = (config: ThemeConfig, element?: HTMLElement | null): void => {
+  const target = resolveThemeTarget(element);
+  if (!target) {
+    return;
+  }
+
   const vars = generateThemeVars(config);
 
   for (const [name, value] of Object.entries(vars)) {
-    element.style.setProperty(name, value);
+    target.style.setProperty(name, value);
   }
 };
 
@@ -244,11 +339,16 @@ export const defineTheme = (config: ThemeConfig, element: HTMLElement = document
  * @param config - Theme configuration object (to know which variables to remove)
  * @param element - Target element (default: document.documentElement)
  */
-export const removeTheme = (config: ThemeConfig, element: HTMLElement = document.documentElement): void => {
+export const removeTheme = (config: ThemeConfig, element?: HTMLElement | null): void => {
+  const target = resolveThemeTarget(element);
+  if (!target) {
+    return;
+  }
+
   const vars = generateThemeVars(config);
 
   for (const name of Object.keys(vars)) {
-    element.style.removeProperty(name);
+    target.style.removeProperty(name);
   }
 };
 
@@ -265,9 +365,14 @@ export const removeTheme = (config: ThemeConfig, element: HTMLElement = document
  * const radius = getThemeValue('--radii-md');
  * ```
  */
-export const getThemeValue = (token: string, element: HTMLElement = document.documentElement): string => {
+export const getThemeValue = (token: string, element?: HTMLElement | null): string => {
+  const target = resolveThemeTarget(element);
+  if (!target || typeof getComputedStyle === 'undefined') {
+    return '';
+  }
+
   const varName = token.startsWith('--') ? token : `--${token}`;
-  return getComputedStyle(element).getPropertyValue(varName).trim();
+  return getComputedStyle(target).getPropertyValue(varName).trim();
 };
 
 /**
@@ -282,28 +387,26 @@ export const getThemeValue = (token: string, element: HTMLElement = document.doc
  * setThemeValue('color-blue-500', '#3b82f6');
  * ```
  */
-export const setThemeValue = (token: string, value: string, element: HTMLElement = document.documentElement): void => {
+export const setThemeValue = (token: string, value: string, element?: HTMLElement | null): void => {
+  const target = resolveThemeTarget(element);
+  if (!target) {
+    return;
+  }
+
   const varName = token.startsWith('--') ? token : `--${token}`;
-  element.style.setProperty(varName, value);
+  target.style.setProperty(varName, value);
 };
 
+export type SystemThemeMode = 'dark' | 'light';
+
+/** Attribute used for CSS-based theme switching */
+export const EASE_THEME_ATTRIBUTE = 'data-ease-theme';
+
 /**
- * Create a complete theme with defaults merged
- *
- * @param overrides - Partial theme configuration to merge with defaults
- * @returns Complete theme configuration
- *
- * @example
- * ```typescript
- * const theme = mergeTheme({
- *   colors: {
- *     blue: { 500: '#custom-blue' }
- *   }
- * });
- * // All other default values are preserved
- * ```
+ * Merge a theme with the library defaults (dark baseline).
+ * Use this when you want to start from the built-in design tokens and override a few values.
  */
-export const mergeTheme = (overrides: ThemeConfig): ThemeConfig => {
+export const mergeTheme = (overrides: ThemeConfig = {}): ThemeConfig => {
   return {
     colors: {
       ...defaultColors,
@@ -319,64 +422,144 @@ export const mergeTheme = (overrides: ThemeConfig): ThemeConfig => {
     },
     radii: { ...defaultRadii, ...overrides.radii },
     spacing: { ...defaultSpacing, ...overrides.spacing },
-    typography: { ...defaultTypography, ...overrides.typography }
+    typography: { ...defaultTypography, ...overrides.typography },
+    vars: overrides.vars ? { ...overrides.vars } : undefined
   };
 };
 
 /**
- * Create a dark theme variant
- * Utility to swap light/dark color mappings
- *
- * @example
- * ```typescript
- * defineTheme(createDarkTheme({
- *   colors: {
- *     foreground: 'var(--color-white)'
- *   }
- * }));
- * ```
+ * Alias for `mergeTheme()`.
+ * This package ships a dark baseline theme; light/custom themes should be provided by the consumer.
  */
-export const createDarkTheme = (overrides: ThemeConfig = {}): ThemeConfig =>
-  mergeTheme({
-    ...overrides,
-    colors: {
-      foreground: 'var(--color-gray-0)',
-      ...overrides.colors
-    }
-  });
+export const createDarkTheme = (overrides: ThemeConfig = {}): ThemeConfig => mergeTheme(overrides);
+
+export interface SetThemeNameOptions {
+  /** Target element (defaults to `document.documentElement` in the browser). */
+  element?: HTMLElement | null;
+  /** Attribute name to set (defaults to `data-ease-theme`). */
+  attribute?: string;
+  /** Optional `color-scheme` value to set on the target element. */
+  colorScheme?: SystemThemeMode;
+  /** Set `element.style.colorScheme` (default: true when `colorScheme` is provided). */
+  setColorScheme?: boolean;
+}
 
 /**
- * Create a light theme variant
- *
- * @example
- * ```typescript
- * defineTheme(createLightTheme({
- *   colors: {
- *     foreground: 'var(--color-gray-900)'
- *   }
- * }));
- * ```
+ * Set the active theme name on an element via `[data-ease-theme="<name>"]`.
+ * Useful for CSS-scoped themes.
  */
-export const createLightTheme = (overrides: ThemeConfig = {}): ThemeConfig =>
-  mergeTheme({
-    ...overrides,
-    colors: {
-      foreground: 'var(--color-gray-900)',
-      gray: {
-        0: 'oklab(18.81% -0.0012 -0.006)',
-        100: 'oklab(20.68% -0.0006 -0.0065)',
-        300: 'oklab(24.50% -0.0012 -0.0105)',
-        400: 'oklab(28.45% -0.0012 -0.0118)',
-        500: 'oklab(37.92% -0.0006 -0.0179)',
-        600: 'oklab(65.21% -0.0019 -0.0144)',
-        700: 'oklab(81.71% -0.0002 -0.0073)',
-        800: 'oklab(89.52% 0.0009 -0.0068)',
-        825: 'oklab(91.49% 0.0011 -0.0039)',
-        850: 'oklab(93.49% 0.0011 -0.0039)',
-        875: 'oklab(95.64% 0.0004 -0.0013)',
-        900: 'oklab(97.64% 0.0004 -0.0013)',
-        1000: 'oklab(98.81% 0 0)'
-      },
-      ...overrides.colors
-    }
-  });
+export const setThemeName = (name: string, options: SetThemeNameOptions = {}): void => {
+  const target = resolveThemeTarget(options.element);
+  if (!target) {
+    return;
+  }
+
+  const attribute = options.attribute ?? EASE_THEME_ATTRIBUTE;
+  target.setAttribute(attribute, name);
+
+  if (options.colorScheme && options.setColorScheme !== false) {
+    target.style.colorScheme = options.colorScheme;
+  }
+};
+
+export const getThemeName = (element?: HTMLElement | null, attribute = EASE_THEME_ATTRIBUTE): string | null => {
+  const target = resolveThemeTarget(element);
+  if (!target) {
+    return null;
+  }
+
+  return target.getAttribute(attribute);
+};
+
+export interface ApplyThemeOptions {
+  /** Target element (defaults to `document.documentElement` in the browser). */
+  element?: HTMLElement | null;
+  /** Optional theme name to set as `[data-ease-theme="<name>"]`. */
+  name?: string;
+  /** Attribute name to use when `name` is provided. Defaults to `data-ease-theme`. */
+  attribute?: string;
+  /** Optional `color-scheme` value to set on the target element. */
+  colorScheme?: SystemThemeMode;
+  /** Set `[data-ease-theme]` when `name` is provided (default: true). */
+  setAttribute?: boolean;
+  /** Set `element.style.colorScheme` when `colorScheme` is provided (default: true). */
+  setColorScheme?: boolean;
+  /**
+   * If true, the provided theme is first merged with the library defaults via `mergeTheme()`.
+   * Use this when you only pass partial overrides.
+   */
+  mergeWithDefaults?: boolean;
+}
+
+/**
+ * Apply a theme config (and optional theme name + color-scheme) to an element.
+ * This is SSR-safe: it becomes a no-op when `document` is not available.
+ */
+export const applyTheme = (theme: ThemeConfig, options: ApplyThemeOptions = {}): ThemeConfig => {
+  const target = resolveThemeTarget(options.element);
+  const attribute = options.attribute ?? EASE_THEME_ATTRIBUTE;
+
+  const config = options.mergeWithDefaults ? mergeTheme(theme) : theme;
+
+  defineTheme(config, target);
+
+  if (!target) {
+    return config;
+  }
+
+  if (options.name && options.setAttribute !== false) {
+    target.setAttribute(attribute, options.name);
+  }
+
+  if (options.colorScheme && options.setColorScheme !== false) {
+    target.style.colorScheme = options.colorScheme;
+  }
+
+  return config;
+};
+
+export const getSystemThemeMode = (): SystemThemeMode => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return 'dark';
+  }
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+};
+
+export interface FollowSystemThemeOptions extends Omit<ApplyThemeOptions, 'name' | 'colorScheme'> {
+  /** Theme name for dark mode (default: 'dark'). */
+  darkName?: string;
+  /** Theme name for light mode (default: 'light'). */
+  lightName?: string;
+}
+
+/**
+ * Follow `prefers-color-scheme` and apply the provided themes.
+ *
+ * This package does NOT ship a light theme preset; you supply both themes.
+ * Returns a cleanup function to remove the media query listener.
+ */
+export const followSystemTheme = (
+  themes: { dark: ThemeConfig; light: ThemeConfig },
+  options: FollowSystemThemeOptions = {}
+): (() => void) => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return () => {};
+  }
+
+  const media = window.matchMedia('(prefers-color-scheme: light)');
+  const apply = (): void => {
+    const mode: SystemThemeMode = media.matches ? 'light' : 'dark';
+    const theme = mode === 'light' ? themes.light : themes.dark;
+
+    applyTheme(theme, {
+      ...options,
+      name: mode === 'light' ? (options.lightName ?? 'light') : (options.darkName ?? 'dark'),
+      colorScheme: mode
+    });
+  };
+
+  apply();
+
+  media.addEventListener('change', apply);
+  return () => media.removeEventListener('change', apply);
+};

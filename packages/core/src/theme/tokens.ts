@@ -29,6 +29,7 @@ export type GrayScale = ColorScale & {
  * Alpha color variations
  */
 export type AlphaColors = {
+  0?: string;
   2?: string;
   4?: string;
   6?: string;
@@ -120,6 +121,21 @@ export interface TypographyConfig {
 }
 
 /**
+ * Arbitrary CSS custom properties to apply alongside the theme tokens.
+ *
+ * Keys may be provided with or without the `--` prefix.
+ *
+ * @example
+ * ```ts
+ * vars: {
+ *   '--ease-panel-padding': '16px',
+ *   'ease-field-label-width': '40%'
+ * }
+ * ```
+ */
+export type ThemeVars = Record<string, string | number | null | undefined>;
+
+/**
  * Complete theme configuration
  */
 export interface ThemeConfig {
@@ -131,6 +147,11 @@ export interface ThemeConfig {
   spacing?: SpacingConfig;
   /** Typography settings */
   typography?: TypographyConfig;
+  /**
+   * Extra CSS variables (component tokens, app tokens, etc).
+   * This is the recommended place to set `--ease-*` variables.
+   */
+  vars?: ThemeVars;
 }
 
 /**
@@ -214,6 +235,7 @@ export const defaultColors: Required<ColorPalette> = {
   white: 'oklab(95.14% -0.0013 -0.0186)',
   black: 'oklab(0% 0 0)',
   whiteAlpha: {
+    0: 'oklab(95.14% -0.0013 -0.0186 / 0)',
     2: 'oklab(95.14% -0.0013 -0.0186 / 0.02)',
     4: 'oklab(95.14% -0.0013 -0.0186 / 0.04)',
     6: 'oklab(95.14% -0.0013 -0.0186 / 0.06)',
@@ -224,18 +246,27 @@ export const defaultColors: Required<ColorPalette> = {
     20: 'oklab(95.14% -0.0013 -0.0186 / 0.2)',
     30: 'oklab(95.14% -0.0013 -0.0186 / 0.3)',
     40: 'oklab(95.14% -0.0013 -0.0186 / 0.4)',
+    50: 'oklab(95.14% -0.0013 -0.0186 / 0.5)',
     70: 'oklab(95.14% -0.0013 -0.0186 / 0.7)',
     80: 'oklab(95.14% -0.0013 -0.0186 / 0.8)',
     90: 'oklab(95.14% -0.0013 -0.0186 / 0.9)'
   },
   blackAlpha: {
+    0: 'oklab(0% 0 0 / 0)',
     2: 'oklab(0% 0 0 / 0.02)',
     4: 'oklab(0% 0 0 / 0.04)',
     6: 'oklab(0% 0 0 / 0.06)',
     8: 'oklab(0% 0 0 / 0.08)',
+    10: 'oklab(0% 0 0 / 0.1)',
     12: 'oklab(0% 0 0 / 0.12)',
     15: 'oklab(0% 0 0 / 0.15)',
-    50: 'oklab(0% 0 0 / 0.5)'
+    20: 'oklab(0% 0 0 / 0.2)',
+    30: 'oklab(0% 0 0 / 0.3)',
+    40: 'oklab(0% 0 0 / 0.4)',
+    50: 'oklab(0% 0 0 / 0.5)',
+    70: 'oklab(0% 0 0 / 0.7)',
+    80: 'oklab(0% 0 0 / 0.8)',
+    90: 'oklab(0% 0 0 / 0.9)'
   },
   foreground: 'var(--color-gray-0)'
 };

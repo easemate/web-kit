@@ -26,10 +26,13 @@ A modern, framework-agnostic UI kit of web components for building animation con
   - [Selective Loading](#selective-loading)
   - [Theme Switching](#theme-switching)
 - [React & Next.js](#react--nextjs)
+  - [JSX Types](#jsx-types)
   - [Basic Setup](#basic-setup)
   - [Next.js App Router](#nextjs-app-router)
+  - [useWebKit Hook](#usewebkit-hook)
   - [useEaseState Hook](#useeasestate-hook)
   - [WebKit Provider](#webkit-provider)
+  - [Event Utilities](#event-utilities)
 - [Components](#components)
   - [Controls](#controls)
   - [Layout & Display](#layout--display)
@@ -177,6 +180,25 @@ kit.theme?.set('light');
 
 The library provides first-class React integration via `@easemate/web-kit/react`.
 
+### JSX Types
+
+Importing `@easemate/web-kit/react` automatically adds JSX types for all `ease-*` custom elements:
+
+```tsx
+import '@easemate/web-kit/react';
+
+// Now ease-* elements are typed in JSX
+<ease-panel>
+  <ease-slider name="volume" value={50} />
+</ease-panel>
+```
+
+You can also import just the JSX types separately:
+
+```tsx
+import '@easemate/web-kit/react/jsx';
+```
+
 ### Basic Setup
 
 ```tsx
@@ -225,6 +247,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
+### useWebKit Hook
+
+The `useWebKit` hook initializes the web kit and tracks readiness:
+
+```tsx
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { useWebKit } from '@easemate/web-kit/react';
+
+function App() {
+  const { ready, theme, dispose } = useWebKit(
+    {
+      theme: 'default',
+      styles: 'main',
+      fonts: 'default',
+      skip: false // Optional: skip initialization
+    },
+    { useState, useEffect, useRef }
+  );
+
+  if (!ready) return <div>Loading...</div>;
+
+  return (
+    <ease-panel>
+      <ease-slider name="value" value="0.5" />
+    </ease-panel>
+  );
+}
+```
+
+The hook manages a singleton controller internally, so multiple components using `useWebKit` will share the same initialization.
+
 ### useEaseState Hook
 
 The `useEaseState` hook provides reactive state management for controls:
@@ -242,8 +297,18 @@ interface AnimationState {
 }
 
 function AnimationControls() {
-  const { stateRef, panelRef, state, set, reset } = useEaseState<AnimationState>(
+  const {
+    stateRef,
+    panelRef,
+    state,
+    get,
+    set,
+    reset,
+    setTab,
+    activeTab
+  } = useEaseState<AnimationState>(
     {
+      initialState: { duration: 1, easing: 'ease-out', loop: false },
       onChange: ({ name, value }) => {
         console.log(`${name} changed to ${value}`);
       },
@@ -279,9 +344,22 @@ function AnimationControls() {
 }
 ```
 
+#### useEaseState Return Values
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `stateRef` | `(element: EaseStateRef \| null) => void` | Ref callback for `<ease-state>` |
+| `panelRef` | `(element: EasePanelRef \| null) => void` | Ref callback for `<ease-panel>` |
+| `state` | `T` | Current state values (reactive) |
+| `get` | `(name: keyof T) => T[keyof T]` | Get a specific control value |
+| `set` | `(name: keyof T, value: T[keyof T]) => void` | Set a control value |
+| `reset` | `() => void` | Reset all controls to initial values |
+| `setTab` | `(index: number) => void` | Switch panel tab |
+| `activeTab` | `number` | Current active tab index |
+
 ### WebKit Provider
 
-For more complex apps, use `createWebKitProvider` to create a context:
+For apps needing shared context, use `createWebKitProvider`:
 
 ```tsx
 // providers.tsx
@@ -301,7 +379,10 @@ import { WebKitProvider } from './providers';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <WebKitProvider options={{ theme: 'default', styles: 'main', fonts: 'default' }}>
+    <WebKitProvider
+      options={{ theme: 'default', styles: 'main', fonts: 'default' }}
+      immediate={true} // Render children before ready (default: true)
+    >
       {children}
     </WebKitProvider>
   );
@@ -319,6 +400,19 @@ function MyComponent() {
 
   return <ease-slider name="value" value="0.5" />;
 }
+```
+
+### Event Utilities
+
+The React module exports typed event creators:
+
+```tsx
+import { createEventHandler, type ControlChangeEvent, type StateChangeEvent, type TabChangeEvent } from '@easemate/web-kit/react';
+
+// Create typed event handlers
+const handleChange = createEventHandler<ControlChangeEvent>((e) => {
+  console.log(e.detail.name, e.detail.value);
+});
 ```
 
 ---
@@ -865,13 +959,13 @@ interface WebKitController {
 | Export | Description |
 |--------|-------------|
 | `@easemate/web-kit` | Main entry (initWebKit + theme + types) |
-| `@easemate/web-kit/react` | React hooks and utilities |
+| `@easemate/web-kit/react` | React hooks, utilities, and JSX types |
+| `@easemate/web-kit/react/jsx` | JSX type augmentation only |
 | `@easemate/web-kit/register` | Side-effect registration (all components) |
 | `@easemate/web-kit/elements` | UI components only |
 | `@easemate/web-kit/decorators` | Component decorators |
 | `@easemate/web-kit/theme` | Theming utilities |
 | `@easemate/web-kit/utils` | Utility functions |
-| `@easemate/web-kit/styles/*` | CSS assets (optional) |
 
 ### Panel API
 

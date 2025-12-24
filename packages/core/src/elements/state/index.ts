@@ -1,24 +1,54 @@
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
+import { html, nothing, type TemplateResult } from 'lit-html';
 
-import { html } from 'lit-html';
+import { CONTROL_CHANGE_EVENT, type ControlEventDetail, dispatchControlEvent, setBooleanAttribute } from '../shared';
 
-import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 type ControlElement = Element & {
   value?: unknown;
   checked?: unknown;
+  name?: string;
 };
 
-const readControlValue = (element: ControlElement): string | null => {
+type StateChangeCallback<T = unknown> = (value: T, name: string) => void;
+type StateSubscription = { unsubscribe: () => void };
+
+/**
+ * Event detail for state change events
+ */
+export interface StateChangeEventDetail {
+  /** The name of the control that changed */
+  name: string;
+  /** The new value */
+  value: unknown;
+  /** The complete state object */
+  state: Record<string, unknown>;
+  /** The original event */
+  event: Event;
+}
+
+/**
+ * Event detail for tab change events
+ */
+export interface TabChangeEventDetail {
+  /** The index of the active tab */
+  index: number;
+  /** The tab id */
+  id: string;
+  /** The original event */
+  event: Event;
+}
+
+const readControlValue = (element: ControlElement): unknown => {
   if (typeof element.value === 'string' || typeof element.value === 'number') {
-    return String(element.value);
+    return element.value;
   }
 
   if (typeof element.checked === 'boolean') {
-    return element.checked ? 'true' : 'false';
+    return element.checked;
   }
 
   if ('getAttribute' in element) {
@@ -31,21 +61,33 @@ const readControlValue = (element: ControlElement): string | null => {
   return element.textContent?.trim() ?? null;
 };
 
+const getControlName = (element: ControlElement): string | null => {
+  if (typeof element.name === 'string' && element.name) {
+    return element.name;
+  }
+  return element.getAttribute?.('name') ?? null;
+};
+
 @Component({
   tag: 'ease-state',
   shadowMode: 'open',
   styles: `
+    :host {
+      --ease-state-transition-duration: 150ms;
+      --ease-state-transition-easing: cubic-bezier(.25, 0, .5, 1);
+    }
+
     [part="section"] {
       display: block;
       width: 100%;
-      max-width: 332px;
-      border-radius: 12px;
-      border: 1px solid var(--color-white-6);
+      max-width: var(--ease-panel-max-width, 332px);
+      border-radius: var(--ease-panel-radius, 12px);
+      border: 1px solid var(--ease-panel-border-color, var(--color-white-6));
       background-clip: padding-box;
-      background: var(--color-gray-1000);
-      box-shadow: 0 0 40px 0 var(--color-white-2) inset;
+      background: var(--ease-panel-background, var(--color-gray-1000));
+      box-shadow: var(--ease-panel-shadow, 0 0 40px 0 var(--color-white-2) inset);
       box-sizing: border-box;
-      padding: 12px;
+      padding: var(--ease-panel-padding, 12px);
       margin: auto;
     }
 
@@ -58,16 +100,57 @@ const readControlValue = (element: ControlElement): string | null => {
     }
 
     [part="headline"] {
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 24px;
-      font-family: "Instrument Sans", sans-serif;
-      color: var(--color-blue-100);
+      font-size: var(--ease-panel-title-font-size, 14px);
+      font-weight: var(--ease-panel-title-font-weight, 500);
+      line-height: var(--ease-panel-title-line-height, 24px);
+      font-family: var(--ease-font-family, "Instrument Sans", sans-serif);
+      color: var(--ease-panel-title-color, var(--color-blue-100));
       margin: 0 0 0 4px;
       flex-grow: 1;
       text-ellipsis: ellipsis;
       overflow: hidden;
       white-space: nowrap;
+    }
+
+    [part="headline"]:has(+ [part="tabs"]:not(:empty)) {
+      display: none;
+    }
+
+    [part="tabs"] {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-grow: 1;
+      margin: 0 0 0 4px;
+    }
+
+    [part="tabs"]:empty {
+      display: none;
+    }
+
+    [part="tab"] {
+      appearance: none;
+      font-size: var(--ease-panel-tab-font-size, 13px);
+      font-weight: var(--ease-panel-tab-font-weight, 500);
+      line-height: var(--ease-panel-tab-line-height, 24px);
+      font-family: var(--ease-font-family, "Instrument Sans", sans-serif);
+      color: var(--ease-panel-tab-color, var(--color-gray-600));
+      background: transparent;
+      border: none;
+      padding: 4px 8px;
+      margin: 0;
+      cursor: pointer;
+      border-radius: var(--ease-panel-tab-radius, 6px);
+      transition: color 0.2s, background-color 0.2s;
+    }
+
+    [part="tab"]:hover {
+      color: var(--ease-panel-tab-color-hover, var(--color-blue-100));
+    }
+
+    [part="tab"][aria-selected="true"] {
+      color: var(--ease-panel-tab-color-active, var(--color-blue-100));
+      background: var(--ease-panel-tab-background-active, var(--color-white-4));
     }
 
     [part="actions"] {
@@ -77,8 +160,9 @@ const readControlValue = (element: ControlElement): string | null => {
       margin-left: auto;
     }
 
-    slot[name="actions"]::slotted(button) {
-      --ease-icon-size: 16px;
+    slot[name="actions"]::slotted(button),
+    slot[name="actions"]::slotted(a) {
+      --ease-icon-size: var(--ease-panel-action-icon-size, 16px);
 
       appearance: none;
       flex: 0 0 24px;
@@ -90,11 +174,36 @@ const readControlValue = (element: ControlElement): string | null => {
       cursor: pointer;
       color: var(--color-gray-600);
       transition: color 0.2s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     slot[name="actions"]::slotted(button:hover),
-    slot[name="actions"]::slotted(button:focus-visible) {
+    slot[name="actions"]::slotted(button:focus-visible),
+    slot[name="actions"]::slotted(a:hover),
+    slot[name="actions"]::slotted(a:focus-visible) {
       color: var(--color-blue-100);
+    }
+
+    slot[name="actions"]::slotted(ease-dropdown) {
+      flex: 0 0 auto;
+      width: auto;
+
+      --ease-icon-size: var(--ease-panel-action-icon-size, 16px);
+      --ease-dropdown-trigger-padding: 4px;
+      --ease-dropdown-radius: 6px;
+      --ease-dropdown-background: transparent;
+      --ease-dropdown-background-hover: transparent;
+      --ease-dropdown-shadow: none;
+      --ease-dropdown-color: var(--color-gray-600);
+      --ease-popover-placement: bottom-end;
+    }
+
+    slot[name="actions"]::slotted(ease-dropdown:hover),
+    slot[name="actions"]::slotted(ease-dropdown:focus-within) {
+      --ease-dropdown-color: var(--color-blue-100);
     }
 
     [part="content"] {
@@ -102,6 +211,54 @@ const readControlValue = (element: ControlElement): string | null => {
       width: 100%;
       box-sizing: border-box;
       margin: auto;
+      overflow: hidden;
+    }
+
+    [part="content"][data-animating="true"] {
+      transition: height var(--ease-state-transition-duration) var(--ease-state-transition-easing);
+    }
+
+    [part="form"] {
+      width: 100%;
+      position: relative;
+    }
+
+    [part="tab-panel"] {
+      width: 100%;
+      opacity: 0;
+      pointer-events: none;
+      display: none;
+    }
+
+    [part="tab-panel"][data-state="active"] {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity var(--ease-state-transition-duration) var(--ease-state-transition-easing);
+    }
+
+    [part="tab-panel"][data-state="fading-out"] {
+      display: block;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--ease-state-transition-duration) var(--ease-state-transition-easing);
+    }
+
+    [part="tab-panel"][data-state="hidden"] {
+      display: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    [part="tab-panel"][data-state="measuring"] {
+      display: block;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      opacity: 0;
+      visibility: hidden;
     }
 
     [part="footer"] {
@@ -109,7 +266,7 @@ const readControlValue = (element: ControlElement): string | null => {
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      padding: 12px;
+      padding: var(--ease-panel-footer-padding, 12px);
       box-sizing: border-box;
       border-top: 1px solid var(--color-white-4);
 
@@ -118,29 +275,181 @@ const readControlValue = (element: ControlElement): string | null => {
       }
     }
 
-    [part="form"] {
-      width: 100%;
-    }
-
-    ::slotted([slot="entry"]) {
+    ::slotted([slot="entry"]),
+    ::slotted([slot^="tab-"]) {
       display: grid;
       gap: 12px;
       box-sizing: border-box;
       width: 100%;
     }
-  `,
-  template() {
+  `
+})
+export class State extends HTMLElement {
+  declare requestRender: () => void;
+
+  #controls: Map<string, ControlElement> = new Map();
+  #state: Record<string, unknown> = {};
+  #initialState: Record<string, unknown> = {};
+  #subscribers: Map<string | '*', Set<StateChangeCallback>> = new Map();
+  #tabs: { id: string; label: string }[] = [];
+  #isAnimating = false;
+
+  @Prop<string | null>({ reflect: true })
+  accessor value!: string | null;
+
+  @Prop<number>({
+    type: Number,
+    reflect: true,
+    attribute: 'active-tab',
+    defaultValue: 0,
+    onChange(next, previous) {
+      const self = this as State;
+      if (next !== previous && previous !== undefined) {
+        self.handleActiveTabChange(previous, next);
+      }
+    }
+  })
+  accessor activeTab: number = 0;
+
+  /** @internal */
+  handleActiveTabChange(previous: number, next: number): void {
+    this.performTabAnimation(previous, next);
+  }
+
+  @Query<HTMLSlotElement>('slot[name="entry"]')
+  accessor entrySlot!: HTMLSlotElement | null;
+
+  @Query<HTMLOutputElement>('output')
+  accessor outputElement!: HTMLOutputElement | null;
+
+  @Query<HTMLElement>('[part="content"]')
+  accessor contentElement!: HTMLElement | null;
+
+  @Query<HTMLElement>('[part="form"]')
+  accessor formElement!: HTMLElement | null;
+
+  /**
+   * Get the current state object with all control values
+   */
+  get state(): Readonly<Record<string, unknown>> {
+    return { ...this.#state };
+  }
+
+  /**
+   * Get a specific control value by name
+   * @param name - The control name
+   * @returns The control value or undefined
+   */
+  get(name: string): unknown {
+    return this.#state[name];
+  }
+
+  /**
+   * Set a control value programmatically
+   * @param name - The control name
+   * @param value - The new value
+   */
+  set(name: string, value: unknown): void {
+    const control = this.#controls.get(name);
+    if (control) {
+      // Update the control element
+      if ('value' in control) {
+        (control as { value: unknown }).value = value;
+      } else if (typeof value === 'boolean' && 'checked' in control) {
+        (control as { checked: boolean }).checked = value;
+      }
+    }
+
+    this.#updateState(name, value, new Event('programmatic'));
+  }
+
+  /**
+   * Subscribe to state changes
+   * @param nameOrCallback - Control name to watch, '*' for all, or callback for all changes
+   * @param callback - Callback when using name filter
+   * @returns Subscription with unsubscribe method
+   */
+  subscribe(callback: StateChangeCallback): StateSubscription;
+  subscribe(name: string, callback: StateChangeCallback): StateSubscription;
+  subscribe(nameOrCallback: string | StateChangeCallback, callback?: StateChangeCallback): StateSubscription {
+    let name: string;
+    let cb: StateChangeCallback;
+
+    if (typeof nameOrCallback === 'function') {
+      name = '*';
+      cb = nameOrCallback;
+    } else {
+      name = nameOrCallback;
+      if (!callback) {
+        throw new Error('[ease-state] subscribe(name, callback) requires a callback');
+      }
+      cb = callback;
+    }
+
+    if (!this.#subscribers.has(name)) {
+      this.#subscribers.set(name, new Set());
+    }
+    this.#subscribers.get(name)?.add(cb);
+
+    return {
+      unsubscribe: () => {
+        this.#subscribers.get(name)?.delete(cb);
+      }
+    };
+  }
+
+  /**
+   * Reset all controls to their initial values
+   */
+  reset(): void {
+    for (const [name, value] of Object.entries(this.#initialState)) {
+      this.set(name, value);
+    }
+  }
+
+  /**
+   * Switch to a specific tab by index
+   * @param index - The tab index (0-based)
+   */
+  setTab(index: number): void {
+    if (index >= 0 && index < this.#tabs.length && index !== this.activeTab) {
+      this.activeTab = index;
+    }
+  }
+
+  connectedCallback(): void {
+    this.#syncTabs();
+    this.#attach();
+    this.entrySlot?.addEventListener('slotchange', this.#handleSlotChange);
+  }
+
+  disconnectedCallback(): void {
+    this.#detach();
+    this.entrySlot?.removeEventListener('slotchange', this.#handleSlotChange);
+  }
+
+  afterRender(): void {
+    if (this.outputElement) {
+      this.outputElement.value = this.value ?? '';
+    }
+    this.#syncTabs();
+  }
+
+  render(): TemplateResult {
+    const hasTabs = this.#tabs.length > 0;
+
     return html`
       <section part="section">
         <div part="header">
           <h3 part="headline"><slot name="headline"></slot></h3>
+          ${this.#renderTabs()}
           <div part="actions">
             <slot name="actions"></slot>
           </div>
         </div>
         <div part="content">
           <div part="form">
-            <slot name="entry"></slot>
+            ${hasTabs ? this.#renderTabPanels() : html`<slot name="entry"></slot>`}
           </div>
         </div>
         <div part="footer">
@@ -149,60 +458,237 @@ const readControlValue = (element: ControlElement): string | null => {
       </section>
     `;
   }
-})
-export class State extends HTMLElement {
-  declare requestRender: () => void;
-  #controls: ControlElement[] = [];
 
-  @Prop<string | null>({ reflect: true })
-  accessor value!: string | null;
+  #renderTabs(): TemplateResult | typeof nothing {
+    if (this.#tabs.length === 0) {
+      return nothing;
+    }
 
-  @Query<HTMLSlotElement>('slot')
-  accessor slotElement!: HTMLSlotElement | null;
-
-  @Query<HTMLOutputElement>('output')
-  accessor outputElement!: HTMLOutputElement | null;
-
-  connectedCallback(): void {
-    this.#attach();
-    this.slotElement?.addEventListener('slotchange', this.#handleSlotChange);
+    return html`
+      <div part="tabs" role="tablist">
+        ${this.#tabs.map(
+          (tab, index) => html`
+            <button
+              part="tab"
+              role="tab"
+              aria-selected=${index === this.activeTab ? 'true' : 'false'}
+              aria-controls=${`panel-${tab.id}`}
+              tabindex=${index === this.activeTab ? 0 : -1}
+              @click=${(e: Event) => this.#handleTabClick(index, tab.id, e)}
+              @keydown=${(e: KeyboardEvent) => this.#handleTabKeydown(e, index)}
+            >
+              ${tab.label}
+            </button>
+          `
+        )}
+      </div>
+    `;
   }
 
-  disconnectedCallback(): void {
+  #renderTabPanels(): TemplateResult {
+    return html`
+      ${this.#tabs.map(
+        (tab, index) => html`
+          <div
+            part="tab-panel"
+            role="tabpanel"
+            id=${`panel-${tab.id}`}
+            aria-labelledby=${`tab-${tab.id}`}
+            data-state=${index === this.activeTab ? 'active' : 'hidden'}
+            data-index=${index}
+          >
+            <slot name=${`tab-${tab.id}`}></slot>
+          </div>
+        `
+      )}
+    `;
+  }
+
+  #handleTabClick(index: number, id: string, event: Event): void {
+    if (index === this.activeTab) {
+      return;
+    }
+
+    this.activeTab = index;
+
+    dispatchControlEvent(this, 'tab-change', {
+      index,
+      id,
+      event
+    } as TabChangeEventDetail & { value: unknown });
+  }
+
+  #handleTabKeydown(event: KeyboardEvent, currentIndex: number): void {
+    let newIndex = currentIndex;
+
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault();
+        newIndex = currentIndex > 0 ? currentIndex - 1 : this.#tabs.length - 1;
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        newIndex = currentIndex < this.#tabs.length - 1 ? currentIndex + 1 : 0;
+        break;
+      case 'Home':
+        event.preventDefault();
+        newIndex = 0;
+        break;
+      case 'End':
+        event.preventDefault();
+        newIndex = this.#tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    if (newIndex !== currentIndex) {
+      this.activeTab = newIndex;
+
+      // Focus the new tab button
+      queueMicrotask(() => {
+        const tabButtons = this.shadowRoot?.querySelectorAll('[part="tab"]');
+        const newTabButton = tabButtons?.[newIndex] as HTMLButtonElement | undefined;
+        newTabButton?.focus();
+      });
+    }
+  }
+
+  async performTabAnimation(fromIndex: number, toIndex: number): Promise<void> {
+    if (this.#isAnimating) {
+      return;
+    }
+
+    this.#isAnimating = true;
+    const content = this.contentElement;
+
+    if (!content) {
+      this.#isAnimating = false;
+      this.requestRender();
+      return;
+    }
+
+    // Get the panels by data-index attribute for reliability
+    const fromPanel = this.shadowRoot?.querySelector(
+      `[part="tab-panel"][data-index="${fromIndex}"]`
+    ) as HTMLElement | null;
+    const toPanel = this.shadowRoot?.querySelector(`[part="tab-panel"][data-index="${toIndex}"]`) as HTMLElement | null;
+
+    if (!fromPanel || !toPanel) {
+      this.#isAnimating = false;
+      this.requestRender();
+      return;
+    }
+
+    // Get the current height
+    const startHeight = content.offsetHeight;
+
+    // Lock the height
+    content.style.height = `${startHeight}px`;
+
+    // Step 1: Fade out old panel
+    fromPanel.setAttribute('data-state', 'fading-out');
+
+    // Wait for fade out
+    await this.#wait(150);
+
+    // Hide old panel
+    fromPanel.setAttribute('data-state', 'hidden');
+
+    // Measure new panel (absolutely positioned, opacity 0)
+    toPanel.setAttribute('data-state', 'measuring');
+    void toPanel.offsetHeight;
+    const endHeight = toPanel.offsetHeight;
+
+    // Step 2: Animate height if different
+    if (startHeight !== endHeight) {
+      content.setAttribute('data-animating', 'true');
+      void content.offsetHeight;
+      content.style.height = `${endHeight}px`;
+      await this.#wait(150);
+    }
+
+    // Step 3: Prepare for fade in using inline styles for precise control
+    // Keep the panel invisible during measuring phase
+    toPanel.style.transition = 'none';
+    toPanel.style.opacity = '0';
+    toPanel.style.position = 'absolute';
+    toPanel.style.top = '0';
+    toPanel.style.left = '0';
+    toPanel.style.right = '0';
+    toPanel.setAttribute('data-state', 'active');
+
+    // Force browser to acknowledge the opacity: 0 state
+    void toPanel.offsetHeight;
+
+    // Wait a frame to ensure paint
+    await this.#nextFrame();
+
+    // Now make it visible and animate to opacity: 1 using inline style
+    toPanel.style.position = '';
+    toPanel.style.top = '';
+    toPanel.style.left = '';
+    toPanel.style.right = '';
+    toPanel.style.transition = `opacity 150ms cubic-bezier(.25, 0, .5, 1)`;
+    toPanel.style.opacity = '1';
+
+    // Wait for fade in
+    await this.#wait(150);
+
+    // Final cleanup - remove inline styles
+    toPanel.style.cssText = '';
+    content.style.height = '';
+    content.removeAttribute('data-animating');
+    this.#isAnimating = false;
+
+    // Re-attach controls for the new tab
     this.#detach();
-    this.slotElement?.removeEventListener('slotchange', this.#handleSlotChange);
+    this.#attach();
   }
 
-  afterRender(): void {
-    if (this.outputElement) {
-      this.outputElement.value = this.value ?? '';
+  #nextFrame(): Promise<void> {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  }
+
+  #wait(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  #syncTabs(): void {
+    const tabs: { id: string; label: string }[] = [];
+
+    // Look for slots with tab-* pattern
+    for (const child of Array.from(this.children)) {
+      const slot = child.getAttribute('slot');
+      if (slot?.startsWith('tab-')) {
+        const id = slot.replace('tab-', '');
+        const label = child.getAttribute('data-tab-label') || id;
+        tabs.push({ id, label });
+      }
+    }
+
+    // Limit to 3 tabs
+    this.#tabs = tabs.slice(0, 3);
+
+    // Ensure activeTab is within bounds
+    if (this.activeTab >= this.#tabs.length && this.#tabs.length > 0) {
+      this.activeTab = 0;
     }
   }
 
-  @Listen<State, Event>('input', { target: (host) => host })
-  handleInternalInput(event: Event): void {
-    if (!(event.target instanceof Element)) {
-      return;
-    }
-
-    if (!this.#controls.includes(event.target as ControlElement)) {
-      return;
-    }
-
-    this.#updateValue(event.target as ControlElement, event);
+  @Listen<State, CustomEvent<ControlEventDetail>>('input', { target: (host) => host })
+  handleInternalInput(event: CustomEvent<ControlEventDetail>): void {
+    this.#handleControlEvent(event);
   }
 
-  @Listen<State, Event>('change', { target: (host) => host })
-  handleInternalChange(event: Event): void {
-    if (!(event.target instanceof Element)) {
-      return;
-    }
+  @Listen<State, CustomEvent<ControlEventDetail>>('change', { target: (host) => host })
+  handleInternalChange(event: CustomEvent<ControlEventDetail>): void {
+    this.#handleControlEvent(event);
+  }
 
-    if (!this.#controls.includes(event.target as ControlElement)) {
-      return;
-    }
-
-    this.#updateValue(event.target as ControlElement, event);
+  @Listen<State, CustomEvent<ControlEventDetail>>(CONTROL_CHANGE_EVENT, { target: (host) => host })
+  handleControlChange(event: CustomEvent<ControlEventDetail>): void {
+    this.#handleControlEvent(event);
   }
 
   @Listen('slotchange', { selector: 'slot[name="footer"]' })
@@ -210,36 +696,142 @@ export class State extends HTMLElement {
     this.updateFooterAttribute();
   }
 
+  #handleControlEvent(event: Event | CustomEvent<ControlEventDetail>): void {
+    // Try to get name from custom event detail first
+    if ('detail' in event && event.detail?.name) {
+      this.#updateState(event.detail.name, event.detail.value, event);
+      return;
+    }
+
+    // Fall back to reading from element
+    if (!(event.target instanceof Element)) {
+      return;
+    }
+
+    const control = event.target as ControlElement;
+    const name = getControlName(control);
+
+    if (!name || !this.#controls.has(name)) {
+      return;
+    }
+
+    const value = readControlValue(control);
+    this.#updateState(name, value, event);
+  }
+
   #handleSlotChange = (): void => {
+    this.#syncTabs();
     this.#detach();
     this.#attach();
   };
 
   #attach(): void {
-    if (!this.slotElement) {
-      return;
+    const slots: HTMLSlotElement[] = [];
+
+    // Get entry slot if no tabs
+    if (this.#tabs.length === 0) {
+      if (this.entrySlot) {
+        slots.push(this.entrySlot);
+      }
+    } else {
+      // Get the active tab's slot
+      const activeTab = this.#tabs[this.activeTab];
+      if (activeTab) {
+        const tabSlot = this.shadowRoot?.querySelector(`slot[name="tab-${activeTab.id}"]`) as HTMLSlotElement | null;
+        if (tabSlot) {
+          slots.push(tabSlot);
+        }
+      }
     }
 
-    this.#controls = this.slotElement.assignedElements({ flatten: true }) as ControlElement[];
+    // Find all controls with names (recursively search in containers)
+    const findControls = (el: Element): ControlElement[] => {
+      const controls: ControlElement[] = [];
+      const name = getControlName(el as ControlElement);
 
-    const first = this.#controls[0];
+      if (name) {
+        controls.push(el as ControlElement);
+      }
+
+      // Search in shadow DOM
+      if (el.shadowRoot) {
+        for (const child of el.shadowRoot.querySelectorAll('[name]')) {
+          const childName = getControlName(child as ControlElement);
+          if (childName) {
+            controls.push(child as ControlElement);
+          }
+        }
+      }
+
+      // Search in light DOM children
+      for (const child of el.querySelectorAll('[name]')) {
+        const childName = getControlName(child as ControlElement);
+        if (childName) {
+          controls.push(child as ControlElement);
+        }
+      }
+
+      return controls;
+    };
+
+    this.#controls.clear();
+    this.#state = {};
+
+    for (const slot of slots) {
+      const elements = slot.assignedElements({ flatten: true });
+
+      for (const element of elements) {
+        const controls = findControls(element);
+        for (const control of controls) {
+          const name = getControlName(control);
+          if (name) {
+            this.#controls.set(name, control);
+            const value = readControlValue(control);
+            this.#state[name] = value;
+            this.#initialState[name] = value;
+          }
+        }
+      }
+    }
+
+    // Set initial value to first control's value for backwards compatibility
+    const first = this.#controls.values().next().value;
     if (first) {
-      this.value = readControlValue(first);
+      const name = getControlName(first);
+      this.value = name && this.#state[name] != null ? String(this.#state[name]) : null;
     }
   }
 
   #detach(): void {
-    this.#controls = [];
+    this.#controls.clear();
   }
 
-  #updateValue(element: ControlElement, event: Event): void {
-    const nextValue = readControlValue(element);
-    if (this.value === nextValue) {
+  #updateState(name: string, value: unknown, event: Event): void {
+    const prevValue = this.#state[name];
+    if (prevValue === value) {
       return;
     }
 
-    this.value = nextValue;
-    dispatchControlEvent(this, 'state-change', { value: this.value, event });
+    this.#state[name] = value;
+
+    // Update legacy value prop for backwards compatibility
+    this.value = String(value);
+
+    // Notify subscribers
+    for (const cb of this.#subscribers.get(name) ?? []) {
+      cb(value, name);
+    }
+    for (const cb of this.#subscribers.get('*') ?? []) {
+      cb(value, name);
+    }
+
+    // Dispatch state-change event
+    dispatchControlEvent(this, 'state-change', {
+      name,
+      value,
+      state: this.state,
+      event
+    } as StateChangeEventDetail & { event: Event });
   }
 
   private updateFooterAttribute(): void {

@@ -1,6 +1,6 @@
 {
   "name": "@easemate/web-kit",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "UI kit of web components for easemate - a typescript animation library",
   "type": "module",
   "files": [
@@ -55,6 +55,7 @@
       "./decorators": "./src/decorators/index.ts",
       "./utils": "./src/utils/index.ts",
       "./theme": "./src/theme/index.ts",
+      "./react": "./src/react/index.ts",
       "./register": "./src/register.ts"
     }
   },
@@ -84,10 +85,23 @@
       "import": "./build/theme/index.js",
       "require": "./build/theme/index.cjs"
     },
+    "./react": {
+      "types": "./build/react/index.d.cts",
+      "import": "./build/react/index.js",
+      "require": "./build/react/index.cjs"
+    },
     "./register": {
       "types": "./build/register.d.cts",
       "import": "./build/register.js",
       "require": "./build/register.cjs"
+    }
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
     }
   },
   "main": "./build/index.cjs",

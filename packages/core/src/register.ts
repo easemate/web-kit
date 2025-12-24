@@ -22,6 +22,7 @@ import './elements/monitor';
 import './elements/monitor/fps';
 import './elements/number';
 import './elements/origin';
+import './elements/panel';
 import './elements/popover';
 import './elements/radio';
 import './elements/radio/input';

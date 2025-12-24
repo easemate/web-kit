@@ -59,3 +59,25 @@ main {
 .logo-controls button:active {
   transform: scale(0.97);
 }
+
+/* Standalone State Demo */
+.standalone-demo {
+  grid-column: 1 / -1;
+  padding: 24px;
+  background: var(--color-gray-900);
+  border-radius: var(--radii-lg);
+}
+
+.standalone-demo h2 {
+  margin: 0 0 16px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-gray-400);
+}
+
+.standalone-demo ease-state {
+  display: grid;
+  gap: 12px;
+  max-width: 300px;
+}

@@ -1,6 +1,21 @@
-# @easemate/web-kit
+<h1>@easemate/web-kit</h1>
+
+<div align="center">
+  <img src="https://easemate.app/easemate-web-kit-header.png" alt="@easemate/web-kit" />
+</div>
+
+<br />
 
 A modern, framework-agnostic UI kit of web components for building animation control panels.
+
+<div>
+
+[![npm version](https://img.shields.io/npm/v/@easemate/web-kit.svg?style=flat-square)](https://www.npmjs.com/package/@easemate/web-kit)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@easemate/web-kit?style=flat-square&label=bundle%20size)](https://bundlephobia.com/package/@easemate/web-kit)
+[![npm downloads](https://img.shields.io/npm/dm/@easemate/web-kit.svg?style=flat-square)](https://www.npmjs.com/package/@easemate/web-kit)
+[![license](https://img.shields.io/npm/l/@easemate/web-kit.svg?style=flat-square)](https://github.com/easemate/web-kit/blob/main/LICENSE)
+
+</div>
 
 ## Table of Contents
 
@@ -10,6 +25,11 @@ A modern, framework-agnostic UI kit of web components for building animation con
   - [Basic Usage](#basic-usage)
   - [Selective Loading](#selective-loading)
   - [Theme Switching](#theme-switching)
+- [React & Next.js](#react--nextjs)
+  - [Basic Setup](#basic-setup)
+  - [Next.js App Router](#nextjs-app-router)
+  - [useEaseState Hook](#useeasestate-hook)
+  - [WebKit Provider](#webkit-provider)
 - [Components](#components)
   - [Controls](#controls)
   - [Layout & Display](#layout--display)
@@ -17,13 +37,10 @@ A modern, framework-agnostic UI kit of web components for building animation con
   - [Icons](#icons)
 - [Usage Examples](#usage-examples)
   - [Basic Controls](#basic-controls)
-  - [State Panel](#state-panel)
-    - [Header Actions](#header-actions)
-    - [Tabs](#tabs)
-    - [Tabs with Actions](#tabs-with-actions)
-    - [Footer](#footer)
+  - [Panel Component](#panel-component)
+  - [State Component](#state-component)
+  - [Combined Panel + State](#combined-panel--state)
   - [JavaScript Integration](#javascript-integration)
-    - [Tab Control](#tab-control)
   - [Event Handling](#event-handling)
 - [Configuration](#configuration)
   - [initWebKit Options](#initwebkit-options)
@@ -38,7 +55,8 @@ A modern, framework-agnostic UI kit of web components for building animation con
 - [API Reference](#api-reference)
   - [Controller API](#controller-api)
   - [Package Exports](#package-exports)
-  - [State Panel API](#state-panel-api)
+  - [Panel API](#panel-api)
+  - [State API](#state-api)
 - [Accessibility](#accessibility)
 - [SSR Support](#ssr-support)
 - [License](#license)
@@ -47,15 +65,17 @@ A modern, framework-agnostic UI kit of web components for building animation con
 
 ## Features
 
-- 🎨 **Rich Component Library** — Sliders, toggles, color pickers, dropdowns, curve editors, and more
-- 🌙 **Dark Theme by Default** — Beautiful dark UI with OKLAB color palette
-- 🔌 **Framework Agnostic** — Works with vanilla JS, React, Vue, Svelte, or any framework
-- 📦 **Tree-Shakeable** — Import only what you need
-- 🎯 **TypeScript First** — Full type definitions included
-- ♿ **Accessible** — ARIA attributes and keyboard navigation
-- 🎭 **Customizable** — CSS custom properties and `::part` selectors for styling
-- 📡 **State Aggregation** — Control panel state management with `<ease-state>`
-- 🚀 **No CSS Import Required** — `initWebKit()` handles everything programmatically
+- **Rich Component Library** - Sliders, toggles, color pickers, dropdowns, curve editors, and more
+- **Dark Theme by Default** - Beautiful dark UI with OKLAB color palette
+- **Framework Agnostic** - Works with vanilla JS, React, Vue, Svelte, or any framework
+- **React/Next.js Ready** - First-class React integration with hooks and SSR support
+- **Tree-Shakeable** - Import only what you need
+- **TypeScript First** - Full type definitions included
+- **Accessible** - ARIA attributes and keyboard navigation
+- **Customizable** - CSS custom properties and `::part` selectors for styling
+- **State Aggregation** - Control panel state management with `<ease-state>`
+- **Flexible Layout** - Separate `<ease-panel>` and `<ease-state>` for maximum flexibility
+- **No CSS Import Required** - `initWebKit()` handles everything programmatically
 
 ---
 
@@ -153,6 +173,156 @@ kit.theme?.set('light');
 
 ---
 
+## React & Next.js
+
+The library provides first-class React integration via `@easemate/web-kit/react`.
+
+### Basic Setup
+
+```tsx
+// app/providers.tsx
+'use client';
+
+import { useEffect, useState, useRef } from 'react';
+import { initWebKit, type WebKitController } from '@easemate/web-kit';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  const [ready, setReady] = useState(false);
+  const controllerRef = useRef<WebKitController | null>(null);
+
+  useEffect(() => {
+    const controller = initWebKit({
+      theme: 'default',
+      styles: 'main',
+      fonts: 'default'
+    });
+    controllerRef.current = controller;
+    controller.ready.then(() => setReady(true));
+
+    return () => controller.dispose();
+  }, []);
+
+  return <>{children}</>;
+}
+```
+
+### Next.js App Router
+
+For Next.js 13+ with App Router, create a client component wrapper:
+
+```tsx
+// app/layout.tsx
+import { Providers } from './providers';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+### useEaseState Hook
+
+The `useEaseState` hook provides reactive state management for controls:
+
+```tsx
+'use client';
+
+import { useState, useCallback, useRef } from 'react';
+import { useEaseState } from '@easemate/web-kit/react';
+
+interface AnimationState {
+  duration: number;
+  easing: string;
+  loop: boolean;
+}
+
+function AnimationControls() {
+  const { stateRef, panelRef, state, set, reset } = useEaseState<AnimationState>(
+    {
+      onChange: ({ name, value }) => {
+        console.log(`${name} changed to ${value}`);
+      },
+      onTabChange: ({ index }) => {
+        console.log(`Switched to tab ${index}`);
+      }
+    },
+    { useState, useCallback, useRef }
+  );
+
+  return (
+    <ease-panel ref={panelRef}>
+      <span slot="headline">Animation</span>
+      <ease-state ref={stateRef}>
+        <ease-field label="Duration">
+          <ease-slider name="duration" value="1" min="0" max="5" step="0.1" />
+        </ease-field>
+        <ease-field label="Easing">
+          <ease-dropdown name="easing" value="ease-out">
+            <button slot="content" value="linear">Linear</button>
+            <button slot="content" value="ease-out">Ease Out</button>
+          </ease-dropdown>
+        </ease-field>
+        <ease-field label="Loop">
+          <ease-toggle name="loop" />
+        </ease-field>
+      </ease-state>
+      <div slot="footer">
+        <ease-button onClick={() => reset()}>Reset</ease-button>
+      </div>
+    </ease-panel>
+  );
+}
+```
+
+### WebKit Provider
+
+For more complex apps, use `createWebKitProvider` to create a context:
+
+```tsx
+// providers.tsx
+'use client';
+
+import * as React from 'react';
+import { createWebKitProvider } from '@easemate/web-kit/react';
+
+const { WebKitProvider, useWebKitContext } = createWebKitProvider(React);
+
+export { WebKitProvider, useWebKitContext };
+```
+
+```tsx
+// layout.tsx
+import { WebKitProvider } from './providers';
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <WebKitProvider options={{ theme: 'default', styles: 'main', fonts: 'default' }}>
+      {children}
+    </WebKitProvider>
+  );
+}
+```
+
+```tsx
+// component.tsx
+import { useWebKitContext } from './providers';
+
+function MyComponent() {
+  const { ready, theme } = useWebKitContext();
+
+  if (!ready) return <div>Loading...</div>;
+
+  return <ease-slider name="value" value="0.5" />;
+}
+```
+
+---
+
 ## Components
 
 ### Controls
@@ -175,7 +345,8 @@ kit.theme?.set('light');
 
 | Component | Tag | Description |
 |-----------|-----|-------------|
-| State | `<ease-state>` | State aggregation panel |
+| Panel | `<ease-panel>` | Visual container with tabs, header, and footer |
+| State | `<ease-state>` | State aggregator for controls (no visual styling) |
 | Field | `<ease-field>` | Label + control wrapper |
 | Button | `<ease-button>` | Action button |
 | Tooltip | `<ease-tooltip>` | Tooltip wrapper |
@@ -215,14 +386,79 @@ All icon components follow the pattern `<ease-icon-*>`:
 <ease-number-input name="count" value="42" min="0" max="100"></ease-number-input>
 ```
 
-### State Panel
+### Panel Component
 
-Basic panel with headline and controls:
+The `<ease-panel>` component provides the visual container with optional tabs, header actions, and footer. It does NOT manage state - use `<ease-state>` for that.
 
 ```html
+<!-- Simple panel with headline -->
+<ease-panel>
+  <span slot="headline">Settings</span>
+  <div>
+    <!-- Your content here -->
+  </div>
+</ease-panel>
+
+<!-- Panel with tabs -->
+<ease-panel active-tab="0">
+  <div slot="tab-general" data-tab-label="General">
+    <!-- General settings -->
+  </div>
+  <div slot="tab-advanced" data-tab-label="Advanced">
+    <!-- Advanced settings -->
+  </div>
+</ease-panel>
+
+<!-- Panel with header actions -->
+<ease-panel>
+  <span slot="headline">Controls</span>
+  <button slot="actions" title="Settings">
+    <ease-icon-settings></ease-icon-settings>
+  </button>
+  <div>
+    <!-- Content -->
+  </div>
+  <div slot="footer">
+    <ease-button>Save</ease-button>
+  </div>
+</ease-panel>
+```
+
+### State Component
+
+The `<ease-state>` component aggregates state from child controls. It can be used standalone (no panel styling) or inside a panel.
+
+```html
+<!-- Standalone state (no panel) - useful for embedding in your own UI -->
 <ease-state>
+  <ease-field label="Duration">
+    <ease-slider name="duration" value="1" min="0" max="5" step="0.1"></ease-slider>
+  </ease-field>
+  <ease-field label="Easing">
+    <ease-dropdown name="easing" value="ease-out">
+      <button slot="content" value="linear">Linear</button>
+      <button slot="content" value="ease-out">Ease Out</button>
+    </ease-dropdown>
+  </ease-field>
+  <ease-field label="Loop">
+    <ease-toggle name="loop"></ease-toggle>
+  </ease-field>
+</ease-state>
+```
+
+### Combined Panel + State
+
+For a complete control panel experience, combine `<ease-panel>` with `<ease-state>`:
+
+```html
+<ease-panel>
   <span slot="headline">Animation Controls</span>
-  <div slot="entry">
+  
+  <button slot="actions" title="Reset">
+    <ease-icon-minus></ease-icon-minus>
+  </button>
+  
+  <ease-state>
     <ease-field label="Duration">
       <ease-slider name="duration" value="1" min="0" max="5" step="0.1"></ease-slider>
     </ease-field>
@@ -237,141 +473,56 @@ Basic panel with headline and controls:
     <ease-field label="Loop">
       <ease-toggle name="loop"></ease-toggle>
     </ease-field>
-  </div>
-</ease-state>
-```
-
-#### Header Actions
-
-Add action buttons, links, or dropdowns to the panel header using the `actions` slot:
-
-```html
-<ease-state>
-  <span slot="headline">Settings</span>
+  </ease-state>
   
-  <!-- Action buttons -->
-  <button slot="actions" title="Settings">
-    <ease-icon-settings></ease-icon-settings>
-  </button>
-  <a slot="actions" href="/docs" title="Documentation">
-    <ease-icon-code></ease-icon-code>
-  </a>
-  
-  <!-- Dropdown menu in actions -->
-  <ease-dropdown slot="actions">
-    <ease-icon-dots slot="trigger"></ease-icon-dots>
-    <button slot="content" value="export">Export</button>
-    <button slot="content" value="import">Import</button>
-    <button slot="content" value="reset">Reset</button>
-  </ease-dropdown>
-  
-  <div slot="entry">
-    <!-- controls -->
-  </div>
-</ease-state>
-```
-
-Action elements are automatically styled with hover states and proper spacing. Supported elements:
-- `<button>` — Action button with icon
-- `<a>` — Link with icon  
-- `<ease-dropdown>` — Dropdown menu (auto-positioned to bottom-end)
-
-#### Tabs
-
-Organize controls into tabbed sections (maximum 3 tabs). When tabs are present, the headline is automatically hidden.
-
-```html
-<ease-state active-tab="0">
-  <!-- Tab content uses slot="tab-{id}" pattern -->
-  <!-- Tab label comes from data-tab-label attribute -->
-  
-  <div slot="tab-transform" data-tab-label="Transform">
-    <ease-field label="X">
-      <ease-number-input name="x" value="0"></ease-number-input>
-    </ease-field>
-    <ease-field label="Y">
-      <ease-number-input name="y" value="0"></ease-number-input>
-    </ease-field>
-    <ease-field label="Rotation">
-      <ease-slider name="rotation" value="0" min="0" max="360"></ease-slider>
-    </ease-field>
-  </div>
-  
-  <div slot="tab-style" data-tab-label="Style">
-    <ease-field label="Opacity">
-      <ease-slider name="opacity" value="1" min="0" max="1" step="0.01"></ease-slider>
-    </ease-field>
-    <ease-field label="Color">
-      <ease-color-input name="color" value="#3b82f6"></ease-color-input>
-    </ease-field>
-  </div>
-  
-  <div slot="tab-animation" data-tab-label="Animation">
-    <ease-field label="Duration">
-      <ease-slider name="duration" value="1" min="0" max="5" step="0.1"></ease-slider>
-    </ease-field>
-    <ease-field label="Delay">
-      <ease-slider name="delay" value="0" min="0" max="2" step="0.1"></ease-slider>
-    </ease-field>
-  </div>
-</ease-state>
-```
-
-**Tab Attributes:**
-
-| Attribute | Description |
-|-----------|-------------|
-| `slot="tab-{id}"` | Assigns content to a tab. The `id` is used internally and for events. |
-| `data-tab-label` | Display label for the tab button. Falls back to `id` if not provided. |
-| `active-tab` | (on `<ease-state>`) Zero-based index of the initially active tab. |
-
-**Tab Behavior:**
-- Tabs are detected automatically from slotted elements with `slot="tab-*"` pattern
-- Maximum of 3 tabs supported
-- Switching tabs triggers a smooth crossfade animation with height transition
-- Keyboard navigation: Arrow keys, Home, End
-- State is tracked per-tab (only active tab's controls are in the state object)
-
-#### Tabs with Actions
-
-Combine tabs and header actions:
-
-```html
-<ease-state active-tab="0">
-  <!-- Actions appear to the right of tabs -->
-  <button slot="actions" title="Reset">
-    <ease-icon-minus></ease-icon-minus>
-  </button>
-  
-  <div slot="tab-basic" data-tab-label="Basic">
-    <!-- controls -->
-  </div>
-  <div slot="tab-advanced" data-tab-label="Advanced">
-    <!-- controls -->
-  </div>
-</ease-state>
-```
-
-#### Footer
-
-Add footer content that appears below all tab panels:
-
-```html
-<ease-state>
-  <span slot="headline">Controls</span>
-  <div slot="entry">
-    <!-- controls -->
-  </div>
   <div slot="footer">
     <ease-button>Apply</ease-button>
     <ease-button variant="secondary">Cancel</ease-button>
   </div>
-</ease-state>
+</ease-panel>
+```
+
+#### Panel with Tabs + State
+
+When using tabs with state, place the `<ease-state>` inside each tab:
+
+```html
+<ease-panel active-tab="0">
+  <button slot="actions" title="Reset">
+    <ease-icon-minus></ease-icon-minus>
+  </button>
+  
+  <div slot="tab-transform" data-tab-label="Transform">
+    <ease-state>
+      <ease-field label="X">
+        <ease-number-input name="x" value="0"></ease-number-input>
+      </ease-field>
+      <ease-field label="Y">
+        <ease-number-input name="y" value="0"></ease-number-input>
+      </ease-field>
+      <ease-field label="Rotation">
+        <ease-slider name="rotation" value="0" min="0" max="360"></ease-slider>
+      </ease-field>
+    </ease-state>
+  </div>
+  
+  <div slot="tab-style" data-tab-label="Style">
+    <ease-state>
+      <ease-field label="Opacity">
+        <ease-slider name="opacity" value="1" min="0" max="1" step="0.01"></ease-slider>
+      </ease-field>
+      <ease-field label="Color">
+        <ease-color-input name="color" value="#3b82f6"></ease-color-input>
+      </ease-field>
+    </ease-state>
+  </div>
+</ease-panel>
 ```
 
 ### JavaScript Integration
 
 ```typescript
+// Working with ease-state
 const state = document.querySelector('ease-state');
 
 // Get current state
@@ -400,19 +551,18 @@ state.reset();
 sub.unsubscribe();
 ```
 
-#### Tab Control
-
 ```typescript
-const state = document.querySelector('ease-state');
+// Working with ease-panel
+const panel = document.querySelector('ease-panel');
 
 // Get current active tab index
-console.log(state.activeTab); // 0
+console.log(panel.activeTab); // 0
 
 // Switch to a specific tab programmatically
-state.setTab(1); // Switch to second tab (0-indexed)
+panel.setTab(1); // Switch to second tab (0-indexed)
 
 // Or set directly via property
-state.activeTab = 2;
+panel.activeTab = 2;
 ```
 
 ### Logo Loader
@@ -497,8 +647,8 @@ state.addEventListener('state-change', (e: CustomEvent) => {
   console.log('Full state:', state);
 });
 
-// Tab change event
-state.addEventListener('tab-change', (e: CustomEvent) => {
+// Panel tab change event
+panel.addEventListener('tab-change', (e: CustomEvent) => {
   const { index, id, event } = e.detail;
   console.log(`Switched to tab ${id} (index: ${index})`);
 });
@@ -506,11 +656,11 @@ state.addEventListener('tab-change', (e: CustomEvent) => {
 
 #### Event Types
 
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `control-change` | `{ name, value, event }` | Fired by individual controls when value changes |
-| `state-change` | `{ name, value, state, event }` | Fired by `<ease-state>` when any control changes |
-| `tab-change` | `{ index, id, event }` | Fired by `<ease-state>` when active tab changes |
+| Event | Component | Detail | Description |
+|-------|-----------|--------|-------------|
+| `control-change` | Controls | `{ name, value, event }` | Fired when value changes |
+| `state-change` | `<ease-state>` | `{ name, value, state, event }` | Fired when any control changes |
+| `tab-change` | `<ease-panel>` | `{ index, id, event }` | Fired when active tab changes |
 
 ---
 
@@ -687,7 +837,7 @@ setThemeName('light', { colorScheme: 'light' });
 | Panel Tabs | `--ease-panel-tab-font-size`, `--ease-panel-tab-font-weight`, `--ease-panel-tab-line-height`, `--ease-panel-tab-color`, `--ease-panel-tab-color-hover`, `--ease-panel-tab-color-active`, `--ease-panel-tab-background-active`, `--ease-panel-tab-radius` |
 | Panel Actions | `--ease-panel-action-icon-size` |
 | Panel Footer | `--ease-panel-footer-padding` |
-| State Transitions | `--ease-state-transition-duration`, `--ease-state-transition-easing` |
+| Panel Transitions | `--ease-panel-transition-duration`, `--ease-panel-transition-easing` |
 | Field | `--ease-field-label-width`, `--ease-field-column-gap`, `--ease-field-row-gap` |
 | Controls | Each control exposes `--ease-<component>-*` tokens |
 
@@ -715,6 +865,7 @@ interface WebKitController {
 | Export | Description |
 |--------|-------------|
 | `@easemate/web-kit` | Main entry (initWebKit + theme + types) |
+| `@easemate/web-kit/react` | React hooks and utilities |
 | `@easemate/web-kit/register` | Side-effect registration (all components) |
 | `@easemate/web-kit/elements` | UI components only |
 | `@easemate/web-kit/decorators` | Component decorators |
@@ -722,27 +873,20 @@ interface WebKitController {
 | `@easemate/web-kit/utils` | Utility functions |
 | `@easemate/web-kit/styles/*` | CSS assets (optional) |
 
-### State Panel API
+### Panel API
 
-The `<ease-state>` component provides a complete API for state management.
+The `<ease-panel>` component provides the visual container.
 
 #### Properties
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `value` | `string \| null` | `null` | Legacy: reflects the last changed control's value |
 | `activeTab` | `number` | `0` | Zero-based index of the active tab |
-| `state` | `Record<string, unknown>` | `{}` | Read-only object containing all control values |
 
 #### Methods
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `get` | `(name: string) => unknown` | Get a specific control value by name |
-| `set` | `(name: string, value: unknown) => void` | Set a control value programmatically |
-| `subscribe` | `(callback: (value, name) => void) => { unsubscribe }` | Subscribe to all state changes |
-| `subscribe` | `(name: string, callback: (value, name) => void) => { unsubscribe }` | Subscribe to a specific control |
-| `reset` | `() => void` | Reset all controls to their initial values |
 | `setTab` | `(index: number) => void` | Switch to a specific tab by index |
 
 #### Slots
@@ -751,7 +895,7 @@ The `<ease-state>` component provides a complete API for state management.
 |------|-------------|
 | `headline` | Panel title text (hidden when tabs are present) |
 | `actions` | Header action buttons, links, or dropdowns |
-| `entry` | Main content area (used when no tabs) |
+| (default) | Main content area (used when no tabs) |
 | `tab-{id}` | Tab panel content (use `data-tab-label` for display name) |
 | `footer` | Footer content below all panels |
 
@@ -766,7 +910,7 @@ The `<ease-state>` component provides a complete API for state management.
 | `tab` | Individual tab button |
 | `actions` | Actions container |
 | `content` | Content wrapper (handles height animations) |
-| `form` | Inner form container |
+| `body` | Inner body container |
 | `tab-panel` | Individual tab panel |
 | `footer` | Footer container |
 
@@ -774,20 +918,60 @@ The `<ease-state>` component provides a complete API for state management.
 
 | Event | Detail Type | Description |
 |-------|-------------|-------------|
-| `state-change` | `StateChangeEventDetail` | Fired when any control value changes |
 | `tab-change` | `TabChangeEventDetail` | Fired when the active tab changes |
+
+```typescript
+interface TabChangeEventDetail {
+  index: number;             // Tab index (0-based)
+  id: string;                // Tab id from slot name
+  event: Event;              // Original event
+}
+```
+
+### State API
+
+The `<ease-state>` component provides state management for controls.
+
+#### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `value` | `string \| null` | `null` | Reflects the last changed control's value |
+| `state` | `Record<string, unknown>` | `{}` | Read-only object containing all control values |
+
+#### Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `get` | `(name: string) => unknown` | Get a specific control value by name |
+| `set` | `(name: string, value: unknown) => void` | Set a control value programmatically |
+| `subscribe` | `(callback: (value, name) => void) => { unsubscribe }` | Subscribe to all state changes |
+| `subscribe` | `(name: string, callback: (value, name) => void) => { unsubscribe }` | Subscribe to a specific control |
+| `reset` | `() => void` | Reset all controls to their initial values |
+
+#### Slots
+
+| Slot | Description |
+|------|-------------|
+| (default) | Controls to aggregate state from |
+
+#### CSS Parts
+
+| Part | Description |
+|------|-------------|
+| `container` | Inner container wrapping controls |
+
+#### Events
+
+| Event | Detail Type | Description |
+|-------|-------------|-------------|
+| `state-change` | `StateChangeEventDetail` | Fired when any control value changes |
 
 ```typescript
 interface StateChangeEventDetail {
   name: string;              // Control name
   value: unknown;            // New value
   state: Record<string, unknown>; // Complete state object
-  event: Event;              // Original event
-}
-
-interface TabChangeEventDetail {
-  index: number;             // Tab index (0-based)
-  id: string;                // Tab id from slot name
   event: Event;              // Original event
 }
 ```
@@ -815,6 +999,14 @@ import { initWebKit } from '@easemate/web-kit';
 // Safe on server - returns immediately without side effects
 const kit = initWebKit({ theme: 'default' });
 await kit.ready; // Resolves immediately on server
+```
+
+For React/Next.js, all hooks check for browser environment:
+
+```tsx
+// This is safe to call on the server
+const { ready, theme } = useWebKitContext();
+// ready will be false on server, true after hydration
 ```
 
 ---

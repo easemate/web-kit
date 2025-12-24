@@ -24,8 +24,8 @@
       </div>
     </section>
 
-    <!-- Example 1: Basic state with button actions -->
-    <ease-state>
+    <!-- Example 1: Basic panel with state and button actions -->
+    <ease-panel>
       <span slot="headline">Overview</span>
       <button slot="actions" aria-label="Settings">
         <ease-icon-settings></ease-icon-settings>
@@ -34,20 +34,20 @@
         <ease-icon-dots></ease-icon-dots>
       </button>
 
-      <form slot="entry" part="entry" method="dialog">
+      <ease-state>
         <ease-field label="Performance" full-width>
           <ease-monitor-fps></ease-monitor-fps>
         </ease-field>
 
         <ease-field label="Toggle">
-          <ease-toggle checked></ease-toggle>
+          <ease-toggle name="toggle-1" checked></ease-toggle>
         </ease-field>
 
         <ease-field label="Color">
-          <ease-color-input value="#FF0000" placement="bottom-end"></ease-color-input>
+          <ease-color-input name="color" value="#FF0000" placement="bottom-end"></ease-color-input>
         </ease-field>
 
-        <ease-field label="Toggle">
+        <ease-field label="Dropdown">
           <ease-dropdown placeholder="Select" id="demo-dropdown-field" name="demo-dropdown-field" value="entry-1" searchable>
             <button slot="content" value="entry-1">Entry #1</button>
             <button slot="content" value="entry-2">Entry #2</button>
@@ -58,25 +58,25 @@
         </ease-field>
 
         <ease-field label="Origin">
-          <ease-origin value="center-center"></ease-origin>
+          <ease-origin name="origin" value="center-center"></ease-origin>
         </ease-field>
 
-        <ease-field label="Toggle">
-          <ease-input id="genie-duration" type="text" placeholder="Duration"></ease-input>
+        <ease-field label="Input">
+          <ease-input id="genie-duration" name="duration" type="text" placeholder="Duration"></ease-input>
         </ease-field>
 
         <ease-field label="Slider">
-          <ease-slider id="genie-slider" value="50" min="0" max="100" step="1"></ease-slider>
+          <ease-slider id="genie-slider" name="slider" value="50" min="0" max="100" step="1"></ease-slider>
         </ease-field>
 
         <ease-field label="Number">
-          <ease-number-input id="genie-number" value="10" min="0" max="15" step="1"></ease-number-input>
+          <ease-number-input id="genie-number" name="number" value="10" min="0" max="15" step="1"></ease-number-input>
         </ease-field>
-      </form>
-    </ease-state>
+      </ease-state>
+    </ease-panel>
 
-    <!-- Example 2: State with dropdown and link actions -->
-    <ease-state>
+    <!-- Example 2: Panel with dropdown and link actions -->
+    <ease-panel>
       <span slot="headline">Easing</span>
       <!-- Link action - redirects to URL -->
       <a slot="actions" href="https://cubic-bezier.com" target="_blank" rel="noopener" aria-label="Open bezier editor">
@@ -96,15 +96,16 @@
       <button slot="actions" aria-label="More options">
         <ease-icon-dots></ease-icon-dots>
       </button>
-      <form slot="entry" part="entry" method="dialog">
-        <ease-curve name="my-easing" easing-type="cubic-bezier"></ease-curve>
-      </form>
-    </ease-state>
 
-    <!-- Example 3: State with tabs (up to 3 tabs) -->
-    <ease-state id="tabbed-state">
+      <ease-state>
+        <ease-curve name="my-easing" easing-type="cubic-bezier"></ease-curve>
+      </ease-state>
+    </ease-panel>
+
+    <!-- Example 3: Panel with tabs (up to 3 tabs) -->
+    <ease-panel id="tabbed-panel">
       <!-- Tab 1: General settings -->
-      <form slot="tab-general" data-tab-label="General" method="dialog">
+      <ease-state slot="tab-general" data-tab-label="General">
         <ease-field label="Name">
           <ease-input name="animation-name" type="text" placeholder="Animation name"></ease-input>
         </ease-field>
@@ -125,15 +126,15 @@
             <button slot="content" value="infinite">Infinite</button>
           </ease-dropdown>
         </ease-field>
-      </form>
+      </ease-state>
 
       <!-- Tab 2: Easing curve -->
-      <form slot="tab-easing" data-tab-label="Easing" method="dialog">
+      <ease-state slot="tab-easing" data-tab-label="Easing">
         <ease-curve name="easing-curve" easing-type="cubic-bezier"></ease-curve>
-      </form>
+      </ease-state>
 
       <!-- Tab 3: Transform -->
-      <form slot="tab-transform" data-tab-label="Transform" method="dialog">
+      <ease-state slot="tab-transform" data-tab-label="Transform">
         <ease-field label="Origin">
           <ease-origin name="transform-origin" value="center-center"></ease-origin>
         </ease-field>
@@ -149,7 +150,7 @@
         <ease-field label="Opacity">
           <ease-slider name="opacity" value="100" min="0" max="100" step="1"></ease-slider>
         </ease-field>
-      </form>
+      </ease-state>
 
       <!-- Actions still work with tabs -->
       <ease-dropdown slot="actions" aria-label="More options" placement="bottom-end">
@@ -158,12 +159,12 @@
         <button slot="content" value="copy">Copy settings</button>
         <button slot="content" value="paste">Paste settings</button>
       </ease-dropdown>
-    </ease-state>
+    </ease-panel>
 
-    <!-- Example 4: Tabs with 2 tabs only -->
-    <ease-state>
+    <!-- Example 4: Panel with 2 tabs only -->
+    <ease-panel>
       <!-- Tab 1: Input -->
-      <form slot="tab-input" data-tab-label="Input" method="dialog">
+      <ease-state slot="tab-input" data-tab-label="Input">
         <ease-field label="Value">
           <ease-input name="input-value" type="text" placeholder="Enter value"></ease-input>
         </ease-field>
@@ -171,10 +172,10 @@
         <ease-field label="Enabled">
           <ease-toggle name="input-enabled" checked></ease-toggle>
         </ease-field>
-      </form>
+      </ease-state>
 
       <!-- Tab 2: Output -->
-      <form slot="tab-output" data-tab-label="Output" method="dialog">
+      <ease-state slot="tab-output" data-tab-label="Output">
         <ease-field label="Format">
           <ease-dropdown name="output-format" value="json">
             <button slot="content" value="json">JSON</button>
@@ -182,13 +183,26 @@
             <button slot="content" value="js">JavaScript</button>
           </ease-dropdown>
         </ease-field>
-      </form>
+      </ease-state>
 
       <!-- Link to documentation -->
       <a slot="actions" href="#docs" aria-label="Documentation">
         <ease-icon-code></ease-icon-code>
       </a>
-    </ease-state>
+    </ease-panel>
+
+    <!-- Example 5: Standalone ease-state without panel (for embedding) -->
+    <section class="standalone-demo">
+      <h2>Standalone State (no panel)</h2>
+      <ease-state id="standalone-state">
+        <ease-field label="Volume">
+          <ease-slider name="volume" value="75" min="0" max="100" step="1"></ease-slider>
+        </ease-field>
+        <ease-field label="Muted">
+          <ease-toggle name="muted"></ease-toggle>
+        </ease-field>
+      </ease-state>
+    </section>
   </main>
 
   <script type="module" src="./index.ts"></script>

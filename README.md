@@ -1,6 +1,21 @@
-# web-kit
+<h1>@easemate/web-kit</h1>
 
-Monorepo for `@easemate/web-kit` — a modern, framework-agnostic UI kit of web components for building animation control panels.
+<div align="center">
+  <img src="https://easemate.app/easemate-web-kit-header.png" alt="@easemate/web-kit" />
+</div>
+
+<br />
+
+Monorepo for `@easemate/web-kit` — a modern, framework-agnostic UI kit of web components containing input element, controls, an easing curve editor & more.
+
+<div>
+
+[![npm version](https://img.shields.io/npm/v/@easemate/web-kit.svg?style=flat-square)](https://www.npmjs.com/package/@easemate/web-kit)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@easemate/web-kit?style=flat-square&label=bundle%20size)](https://bundlephobia.com/package/@easemate/web-kit)
+[![npm downloads](https://img.shields.io/npm/dm/@easemate/web-kit.svg?style=flat-square)](https://www.npmjs.com/package/@easemate/web-kit)
+[![license](https://img.shields.io/npm/l/@easemate/web-kit.svg?style=flat-square)](https://github.com/easemate/web-kit/blob/main/LICENSE)
+
+</div>
 
 ## Packages
 

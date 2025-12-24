@@ -11,6 +11,7 @@ export { Monitor } from './monitor';
 export { MonitorFps } from './monitor/fps';
 export { NumberInput } from './number';
 export { Origin } from './origin';
+export { Panel, type TabChangeEventDetail } from './panel';
 export { type Placement, Popover } from './popover';
 export { RadioGroup } from './radio';
 export { RadioInput } from './radio/input';
@@ -24,6 +25,6 @@ export {
   setBooleanAttribute
 } from './shared';
 export { Slider } from './slider';
-export * from './state';
+export { State, type StateChangeEventDetail } from './state';
 export { Toggle } from './toggle';
 export { Tooltip } from './tooltip';

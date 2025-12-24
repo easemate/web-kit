@@ -23,6 +23,7 @@ export const WEB_KIT_ELEMENT_TAGS = [
 
   // Layout
   'ease-field',
+  'ease-panel',
   'ease-popover',
   'ease-state',
   'ease-tooltip',
@@ -117,6 +118,7 @@ export const COMPONENT_LOADERS: Record<WebKitTag, () => Promise<unknown>> = {
 
   // Layout
   'ease-field': () => import('../elements/field'),
+  'ease-panel': () => import('../elements/panel'),
   'ease-popover': () => import('../elements/popover'),
   'ease-state': () => import('../elements/state'),
   'ease-tooltip': () => import('../elements/tooltip'),

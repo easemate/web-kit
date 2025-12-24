@@ -1,7 +1,7 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-
 import { html, type TemplateResult } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
 
 @Component({
   tag: 'ease-button',
@@ -20,16 +20,16 @@ import { html, type TemplateResult } from 'lit-html';
 
     button {
       appearance: none;
-      font-family: inherit;
+      font-family: var(--ease-font-family, inherit);
       font-optical-sizing: auto;
-      font-size: 12px;
+      font-size: var(--ease-button-font-size, var(--ease-font-size-sm, 12px));
       font-weight: 550;
       color: var(--ease-button-color, var(--color-blue-100));
       min-width: 0;
-      padding: 7px 8px;
+      padding: var(--ease-button-padding, 7px 8px);
       display: block;
       border-radius: var(--ease-button-radius, 5px);
-      background-color: var(--color-gray-850);
+      background-color: var(--ease-button-background, var(--color-gray-850));
       border: none;
       outline: none;
       margin: 0;
@@ -37,7 +37,7 @@ import { html, type TemplateResult } from 'lit-html';
       box-shadow: inset 0 1px .25px 0 var(--color-white-4), 0 1px 2.5px 0 var(--color-black-8);
       transition: color 0.2s, background-color 0.2s, scale 0.2s, box-shadow 0.2s;
       cursor: pointer;
-      min-width: 88px;
+      min-width: var(--ease-button-min-width, 88px);
       white-space: nowrap;
       overflow: hidden;
       position: relative;

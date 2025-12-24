@@ -1,18 +1,18 @@
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
 
 import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-checkbox',
   styles: `
     .checkbox {
       display: table;
-      border-radius: 5px;
+      border-radius: var(--ease-checkbox-radius, 5px);
       position: relative;
 
       svg {
@@ -23,7 +23,7 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
         bottom: 0;
         top: 0;
         pointer-events: none;
-        fill: var(--color-blue-100);
+        fill: var(--ease-checkbox-check-color, var(--color-blue-100));
         transform: scale(1.01) translateZ(0);
 
         .tick {
@@ -31,7 +31,7 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
           stroke-width: 3px;
           stroke-linecap: round;
           stroke-linejoin: round;
-          stroke: var(--color-blue-100);
+          stroke: var(--ease-checkbox-check-color, var(--color-blue-100));
           transform-origin: 10.5px 16px;
           transform: scale(1) translateZ(0);
         }
@@ -71,12 +71,12 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
       margin: 0;
       padding: 0;
       border-radius: inherit;
-      width: 24px;
-      height: 24px;
+      width: var(--ease-checkbox-size, 24px);
+      height: var(--ease-checkbox-size, 24px);
     }
 
     [part="control"] {
-      box-shadow: inset 0 0 0 2px var(--color-gray-700);
+      box-shadow: inset 0 0 0 var(--ease-checkbox-border-width, 2px) var(--ease-checkbox-border-color, var(--color-gray-700));
     }
 
     .tick {
@@ -90,7 +90,7 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
     }
 
     [part="control"]:checked {
-      box-shadow: inset 0 0 0 12px var(--color-blue-800);
+      box-shadow: inset 0 0 0 var(--ease-checkbox-checked-fill-size, 12px) var(--ease-checkbox-checked-fill, var(--color-blue-800));
     }
 
     [part="control"]:checked + svg .tick {
@@ -132,10 +132,10 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
       
     @keyframes checkbox-border-fill {
       0% {
-        box-shadow: inset 0 0 0 2px var(--color-gray-700);
+        box-shadow: inset 0 0 0 var(--ease-checkbox-border-width, 2px) var(--ease-checkbox-border-color, var(--color-gray-700));
       }
         100% {
-            box-shadow: inset 0 0 0 12px var(--color-blue-800);
+            box-shadow: inset 0 0 0 var(--ease-checkbox-checked-fill-size, 12px) var(--ease-checkbox-checked-fill, var(--color-blue-800));
         }
     }
 
@@ -188,10 +188,10 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
     @keyframes checkbox-border-default {
         0%,
         40% {
-            box-shadow: inset 0 0 0 12px var(--color-blue-800);
+            box-shadow: inset 0 0 0 var(--ease-checkbox-checked-fill-size, 12px) var(--ease-checkbox-checked-fill, var(--color-blue-800));
         }
         100% {
-            box-shadow: inset 0 0 0 2px var(--color-gray-700);
+            box-shadow: inset 0 0 0 var(--ease-checkbox-border-width, 2px) var(--ease-checkbox-border-color, var(--color-gray-700));
         }
     }
 

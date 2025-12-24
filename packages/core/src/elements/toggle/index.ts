@@ -1,11 +1,11 @@
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
 
 import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-toggle',
@@ -16,20 +16,20 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
 
     [part="control"] {
       display: block;
-      border-radius: 10px;
-      padding: 4px;
+      border-radius: var(--ease-toggle-radius, 10px);
+      padding: var(--ease-toggle-padding, 4px);
       margin: 0;
       border: none;
       outline: none;
       appearance: none;
       cursor: pointer;
-      background-color: var(--color-blue-900);
+      background-color: var(--ease-toggle-on-background, var(--color-blue-900));
       transition: box-shadow 0.2s, background-color 0.2s;
     }
 
     [part="control"] svg {
-      width: 26px;
-      height: 12px;
+      width: var(--ease-toggle-width, 26px);
+      height: var(--ease-toggle-height, 12px);
       display: block;
       fill: none;
       overflow: visible;
@@ -78,7 +78,7 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
     }
 
     :host(:not([checked])) [part="control"] {
-      background-color: var(--color-gray-800);
+      background-color: var(--ease-toggle-off-background, var(--color-gray-800));
       box-shadow: inset 0 0 0 1px var(--color-white-10), inset 0 1px 0 0 var(--color-white-10), inset 0 4px 6px 0 var(--ease-toggle-shadow, var(--color-white-6));
 
       &:hover {

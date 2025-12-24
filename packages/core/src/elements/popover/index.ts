@@ -1,7 +1,7 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-
 import { html, type TemplateResult } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
 
 export type Placement =
   | 'top-start'

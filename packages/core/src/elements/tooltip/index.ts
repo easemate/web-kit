@@ -1,11 +1,12 @@
-import { Component } from '@/Component';
-import { OutsideClick, requestOutsideClickUpdate } from '@/OutsideClick';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
-import type { Placement } from '../popover';
+import type { Placement } from '~/elements/popover';
+import '../popover';
 
 import { html, type TemplateResult } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
+import { OutsideClick, requestOutsideClickUpdate } from '~/decorators/OutsideClick';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-tooltip',
@@ -21,13 +22,15 @@ import { html, type TemplateResult } from 'lit-html';
     }
 
     [data-tooltip-content] {
-      background-color: #333;
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      max-width: 250px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      background-color: var(--ease-tooltip-background, var(--color-gray-400));
+      color: var(--ease-tooltip-color, var(--color-gray-900));
+      padding: var(--ease-tooltip-padding, 4px 8px);
+      border-radius: var(--ease-tooltip-radius, 4px);
+      font-family: var(--ease-font-family, inherit);
+      font-size: var(--ease-tooltip-font-size, 10px);
+      font-weight: var(--ease-tooltip-font-weight, 500);
+      max-width: var(--ease-tooltip-max-width, 220px);
+      box-shadow: var(--ease-tooltip-shadow, 0 2px 8px rgba(0, 0, 0, 0.2));
       display: none;
     }
 
@@ -97,7 +100,7 @@ export class Tooltip extends HTMLElement {
 
   render(): TemplateResult {
     return html`
-      <ease-popover .placement=${this.placement}>
+      <ease-popover .placement=${this.placement} ?open=${this.open}>
         <slot name="trigger" slot="trigger"></slot>
         <div
           data-tooltip-content

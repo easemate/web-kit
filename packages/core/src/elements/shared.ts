@@ -1,8 +1,36 @@
-export interface ControlEventDetail<TValue> {
+/**
+ * Standard control event detail interface for Leva/lil-gui style state aggregation.
+ * All control components should dispatch events with this shape.
+ */
+export interface ControlEventDetail<TValue = unknown> {
+  /** The control's name/identifier for state aggregation */
+  name?: string;
+  /** The current value of the control */
   value: TValue;
+  /** The original DOM event that triggered this change */
   event: Event;
 }
 
+/** The standard event type for control value changes */
+export const CONTROL_CHANGE_EVENT = 'control-change';
+
+/**
+ * Dispatch a control change event with standard shape.
+ * Events bubble and are composed (cross shadow DOM boundaries).
+ *
+ * @param host - The element dispatching the event
+ * @param type - Event type (prefer CONTROL_CHANGE_EVENT for standard controls)
+ * @param detail - Event detail with value and optional name
+ *
+ * @example
+ * ```ts
+ * dispatchControlEvent(this, CONTROL_CHANGE_EVENT, {
+ *   name: this.name,
+ *   value: this.value,
+ *   event: e
+ * });
+ * ```
+ */
 export const dispatchControlEvent = <THost extends HTMLElement, TValue>(
   host: THost,
   type: string,

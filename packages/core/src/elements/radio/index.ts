@@ -1,8 +1,8 @@
-import { Component } from '@/Component';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
+
+import { Component } from '~/decorators/Component';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 import '../button';
 
 import { dispatchControlEvent } from '../shared';
@@ -55,24 +55,28 @@ const nextPanelId = (() => {
       box-sizing: border-box;
       width: 100%;
       min-width: 0;
-      padding: 3px;
-      border-radius: var(--radii-md);
-      background-color: var(--color-gray-875);
-      box-shadow: inset 0 1px .25px 0 var(--color-white-4), 0 1px 2.5px 0 var(--color-black-8);
+      padding: var(--ease-radio-padding, 3px);
+      border-radius: var(--ease-radio-radius, var(--radii-md));
+      background-color: var(--ease-radio-background, var(--color-gray-875));
+      box-shadow: var(
+        --ease-radio-shadow,
+        inset 0 1px 0.25px 0 var(--color-white-4),
+        0 1px 2.5px 0 var(--color-black-8)
+      );
 
       ::slotted(button) {
-        padding: 4px 0;
-        line-height: 16px;
+        padding: var(--ease-radio-option-padding, 4px 0);
+        line-height: var(--ease-radio-option-line-height, 16px);
         margin: 0;
         border: none;
         outline: none;
         background: none;
         cursor: pointer;
-        font-family: inherit;
+        font-family: var(--ease-font-family, inherit);
         font-optical-sizing: auto;
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--color-gray-600);
+        font-size: var(--ease-radio-option-font-size, var(--ease-font-size-sm, 12px));
+        font-weight: var(--ease-radio-option-font-weight, 500);
+        color: var(--ease-radio-option-color, var(--color-gray-600));
         transition: color 0.2s;
         flex-grow: 1;
       }

@@ -1,11 +1,11 @@
-import { Component } from '@/Component';
-import { Listen } from '@/Listen';
-import { Prop } from '@/Prop';
-import { Query } from '@/Query';
-
 import { html } from 'lit-html';
 
 import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+
+import { Component } from '~/decorators/Component';
+import { Listen } from '~/decorators/Listen';
+import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 @Component({
   tag: 'ease-input',
@@ -36,13 +36,17 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
       min-width: 0;
       box-sizing: border-box;
       padding: var(--ease-input-padding, 8px);
-      border-radius: var(--radii-md);
-      background-color: var(--color-gray-875);
+      border-radius: var(--ease-input-radius, var(--radii-md));
+      background-color: var(--ease-input-background, var(--color-gray-875));
       cursor: text;
       animation: custom-caret 1s infinite;
       caret-animation: manual;
       transition: background-color 0.2s;
-      box-shadow: inset 0 1px .25px 0 var(--color-white-4), 0 1px 2.5px 0 var(--color-black-8);
+      box-shadow: var(
+        --ease-input-shadow,
+        inset 0 1px 0.25px 0 var(--color-white-4),
+        0 1px 2.5px 0 var(--color-black-8)
+      );
 
       &:not([data-has-prefix]):not([data-has-suffix]) {
         padding: var(--ease-input-padding, 8px 12px);
@@ -56,11 +60,11 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
       &:not(:has(input:disabled)) {
 
         &:hover {
-          background-color: var(--color-gray-850);
+          background-color: var(--ease-input-background-hover, var(--color-gray-850));
         }
 
         &:has(input:focus-visible) {
-          background-color: var(--color-gray-825);
+          background-color: var(--ease-input-background-focus, var(--color-gray-825));
         }
 
       }
@@ -152,11 +156,11 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
     input {
       font-family: inherit;
       font-optical-sizing: auto;
-      font-size: 13px;
+      font-size: var(--ease-input-font-size, var(--ease-font-size, 13px));
       appearance: none;
       -moz-appearance: textfield;
-      font-weight: 500;
-      color: var(--color-blue-100);
+      font-weight: var(--ease-input-font-weight, 500);
+      color: var(--ease-input-color, var(--color-blue-100));
       min-width: 0;
       cursor: inherit;
       text-align: inherit;
@@ -165,11 +169,11 @@ import { dispatchControlEvent, setBooleanAttribute } from '../shared';
       border: none;
       outline: none;
       margin: 0;
-      line-height: 14px;
+      line-height: var(--ease-input-line-height, 14px);
       transition: color 0.2s;
 
       &::placeholder {
-        color: var(--color-gray-600);
+        color: var(--ease-input-placeholder-color, var(--color-gray-600));
         opacity: 1;
       }
 

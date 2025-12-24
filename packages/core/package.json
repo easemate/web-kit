@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "clean": "rm -rf build",
-    "build": "npm run clean && zshy",
+    "build": "npm run clean && zshy && tsc-alias -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check src test",
@@ -92,5 +92,8 @@
   },
   "main": "./build/index.cjs",
   "types": "./build/index.d.cts",
-  "module": "./build/index.js"
+  "module": "./build/index.js",
+  "devDependencies": {
+    "tsc-alias": "^1.8.16"
+  }
 }

@@ -40,6 +40,8 @@ type CustomEventHandler<T = unknown> = (event: CustomEvent<T>) => void;
 
 // Base HTML attributes shared by all elements
 interface BaseHTMLAttributes {
+  // React's key prop for list rendering
+  key?: string | number | null;
   id?: string;
   class?: string;
   className?: string;

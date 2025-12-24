@@ -48,6 +48,10 @@ A modern, framework-agnostic UI kit of web components for building animation con
 - [Configuration](#configuration)
   - [initWebKit Options](#initwebkit-options)
   - [Theme Configuration](#theme-configuration)
+    - [Custom Theme Registration](#custom-theme-registration)
+    - [Theme Inheritance](#theme-inheritance)
+    - [Creating a Theme from Scratch](#creating-a-theme-from-scratch)
+    - [Theme Utilities](#theme-utilities)
   - [Font Configuration](#font-configuration)
   - [Lazy Loading](#lazy-loading)
   - [Component Replacement](#component-replacement)
@@ -785,12 +789,18 @@ interface ThemeModeConfig {
   dark: ThemeInput;
   persist?: { key: string }; // Coming soon
 }
+```
 
-// Custom theme registration
+#### Custom Theme Registration
+
+Register custom themes using `registerTheme()`. No TypeScript declaration files needed - custom theme names are fully supported:
+
+```typescript
 import { initWebKit, registerTheme } from '@easemate/web-kit';
 
+// Register a custom theme - returns a typed theme ref
 const brandTheme = registerTheme('brand', {
-  base: 'default', // Inherit from default
+  base: 'default', // Inherit from built-in theme ('default' or 'dark')
   config: {
     typography: {
       fontFamily: '"Inter", system-ui, sans-serif'
@@ -802,7 +812,99 @@ const brandTheme = registerTheme('brand', {
   }
 });
 
+// Use the theme ref (type-safe)
 initWebKit({ theme: brandTheme });
+
+// Or use the string name directly (also works!)
+initWebKit({ theme: 'brand' });
+```
+
+#### Theme Inheritance
+
+Themes can extend other themes using the `base` option:
+
+```typescript
+// Create a base brand theme
+const brandBase = registerTheme('brand-base', {
+  base: 'default',
+  config: {
+    typography: { fontFamily: '"Inter", sans-serif' },
+    vars: { '--ease-panel-radius': '16px' }
+  }
+});
+
+// Create variants that extend brand-base
+const brandLight = registerTheme('brand-light', {
+  base: brandBase, // Can use theme ref or string name
+  config: {
+    colors: {
+      gray: { 900: 'oklab(98% 0 0)', 0: 'oklab(20% 0 0)' }
+    },
+    vars: { '--ease-panel-background': 'white' }
+  }
+});
+
+const brandDark = registerTheme('brand-dark', {
+  base: 'brand-base', // String name works too
+  config: {
+    vars: { '--ease-panel-background': 'var(--color-gray-1000)' }
+  }
+});
+
+// Use with theme mode switching
+initWebKit({
+  theme: {
+    mode: 'system',
+    light: brandLight,
+    dark: brandDark
+  }
+});
+```
+
+#### Creating a Theme from Scratch
+
+Use `base: null` to create a theme without inheriting defaults:
+
+```typescript
+const minimalTheme = registerTheme('minimal', {
+  base: null, // Start fresh, no inheritance
+  config: {
+    colors: {
+      gray: { 900: '#f5f5f5', 0: '#171717' },
+      blue: { 500: '#3b82f6' }
+    },
+    vars: {
+      '--ease-panel-background': 'white',
+      '--ease-panel-border-color': '#e5e5e5'
+    }
+  }
+});
+```
+
+#### Theme Utilities
+
+```typescript
+import { 
+  registerTheme, 
+  getTheme, 
+  hasTheme, 
+  getThemeNames,
+  themeRef 
+} from '@easemate/web-kit';
+
+// Check if a theme exists
+if (hasTheme('brand')) {
+  console.log('Brand theme is registered');
+}
+
+// Get all registered theme names
+const themes = getThemeNames(); // ['default', 'dark', 'brand', ...]
+
+// Get resolved theme config (with inheritance applied)
+const config = getTheme('brand');
+
+// Get a theme ref for an already-registered theme
+const ref = themeRef('brand');
 ```
 
 ### Font Configuration

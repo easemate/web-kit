@@ -7,32 +7,25 @@ import { DARK_THEME_ALIAS, DEFAULT_THEME_NAME, defaultThemeConfig } from './pres
 // --------------------------
 
 /**
- * Augmentable interface for theme names.
- * Consumers can extend this via module augmentation to add custom theme names:
- *
- * @example
- * ```ts
- * declare module '@easemate/web-kit' {
- *   interface WebKitThemeRegistry {
- *     custom: true;
- *     brand: true;
- *   }
- * }
- * ```
+ * Built-in theme names that ship with the library.
  */
-export interface WebKitThemeRegistry {
-  default: true;
-  dark: true;
-}
+export type BuiltInThemeName = 'default' | 'dark';
 
 /**
- * Union of all registered theme names.
+ * Theme name type - accepts built-in names plus any custom string.
+ * The built-in names provide autocomplete while allowing any string.
  */
-export type WebKitThemeName = keyof WebKitThemeRegistry;
+export type WebKitThemeName = BuiltInThemeName | (string & {});
 
 /**
  * A strongly-typed theme reference.
- * Use this for type-safe theme references without module augmentation.
+ * Returned by `registerTheme()` for type-safe theme references.
+ *
+ * @example
+ * ```ts
+ * const myTheme = registerTheme('custom', { config: {...} });
+ * initWebKit({ theme: myTheme }); // Type-safe reference
+ * ```
  */
 export interface WebKitThemeRef<Name extends string = string> {
   readonly __brand: 'WebKitThemeRef';
@@ -40,7 +33,16 @@ export interface WebKitThemeRef<Name extends string = string> {
 }
 
 /**
- * Valid theme input for APIs: a registered theme name, a theme ref, or an inline config.
+ * Valid theme input for APIs: a theme name string, a theme ref, or an inline config.
+ *
+ * @example
+ * ```ts
+ * // All valid:
+ * initWebKit({ theme: 'default' });           // Built-in name
+ * initWebKit({ theme: 'my-custom-theme' });   // Custom string
+ * initWebKit({ theme: myThemeRef });          // Theme ref from registerTheme()
+ * initWebKit({ theme: { colors: {...} } });   // Inline config
+ * ```
  */
 export type ThemeInput = WebKitThemeName | WebKitThemeRef | ThemeConfig;
 
@@ -54,7 +56,7 @@ export interface RegisterThemeOptions {
    * - `null` - no base, starts from scratch
    * - `undefined` - defaults to `'default'`
    */
-  base?: WebKitThemeName | WebKitThemeRef | null;
+  base?: string | WebKitThemeRef | null;
   /**
    * Theme configuration (overrides on top of base).
    */
@@ -283,9 +285,15 @@ export function getThemeNames(): string[] {
 
 /**
  * Create a theme ref for a registered theme name.
- * Useful for type-safe references without module augmentation.
+ * Throws if the theme is not registered.
+ *
+ * @example
+ * ```ts
+ * const ref = themeRef('default'); // Get ref for built-in theme
+ * const customRef = themeRef('my-theme'); // Get ref for registered theme
+ * ```
  */
-export function themeRef<Name extends WebKitThemeName>(name: Name): WebKitThemeRef<Name> {
+export function themeRef<Name extends string>(name: Name): WebKitThemeRef<Name> {
   if (!registry.has(name)) {
     throw new Error(`[web-kit] Theme "${name}" is not registered.`);
   }

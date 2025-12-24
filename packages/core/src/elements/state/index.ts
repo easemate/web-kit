@@ -73,7 +73,7 @@ const getControlName = (element: ControlElement): string | null => {
   shadowMode: 'open',
   styles: `
     :host {
-      --ease-state-transition-duration: 150ms;
+      --ease-state-transition-duration: 120ms;
       --ease-state-transition-easing: cubic-bezier(.25, 0, .5, 1);
     }
 
@@ -225,40 +225,18 @@ const getControlName = (element: ControlElement): string | null => {
 
     [part="tab-panel"] {
       width: 100%;
-      opacity: 0;
       pointer-events: none;
       display: none;
     }
 
     [part="tab-panel"][data-state="active"] {
       display: block;
-      opacity: 1;
       pointer-events: auto;
-      transition: opacity var(--ease-state-transition-duration) var(--ease-state-transition-easing);
-    }
-
-    [part="tab-panel"][data-state="fading-out"] {
-      display: block;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity var(--ease-state-transition-duration) var(--ease-state-transition-easing);
     }
 
     [part="tab-panel"][data-state="hidden"] {
       display: none;
-      opacity: 0;
       pointer-events: none;
-    }
-
-    [part="tab-panel"][data-state="measuring"] {
-      display: block;
-      pointer-events: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      opacity: 0;
-      visibility: hidden;
     }
 
     [part="footer"] {
@@ -560,6 +538,10 @@ export class State extends HTMLElement {
     }
 
     this.#isAnimating = true;
+
+    const duration = 120;
+    const easing = 'cubic-bezier(.25, 0, .5, 1)';
+
     const content = this.contentElement;
 
     if (!content) {
@@ -580,68 +562,76 @@ export class State extends HTMLElement {
       return;
     }
 
-    // Get the current height
-    const startHeight = content.offsetHeight;
-
-    // Lock the height
+    // Lock the current height
+    const startHeight = content.getBoundingClientRect().height;
     content.style.height = `${startHeight}px`;
 
-    // Step 1: Fade out old panel
-    fromPanel.setAttribute('data-state', 'fading-out');
+    // FIX: Ensure the new panel is hidden immediately.
+    // Changing activeTab triggers a render which sets data-state="active" (display: block).
+    // We must override this with inline styles to prevent the content from showing during the fade-out.
+    toPanel.style.display = 'none';
+    toPanel.style.opacity = '0';
 
-    // Wait for fade out
-    await this.#wait(150);
+    // Fade out old content via WAAPI (avoids any "one-frame" flashes)
+    try {
+      const fadeOut = fromPanel.animate([{ opacity: 1 }, { opacity: 0 }], { duration, easing, fill: 'forwards' });
+      await fadeOut.finished;
+      fadeOut.cancel();
+    } catch {
+      // ignore
+    }
 
-    // Hide old panel
     fromPanel.setAttribute('data-state', 'hidden');
 
-    // Measure new panel (absolutely positioned, opacity 0)
-    toPanel.setAttribute('data-state', 'measuring');
-    void toPanel.offsetHeight;
-    const endHeight = toPanel.offsetHeight;
+    // Prepare and measure new panel while completely invisible
+    const previousToState = toPanel.getAttribute('data-state');
 
-    // Step 2: Animate height if different
+    // Reset display to block (overriding our 'none' above) but keep invisible for measuring
+    toPanel.style.display = 'block';
+    toPanel.style.visibility = 'hidden';
+    toPanel.style.opacity = '0';
+
+    // Force layout, then measure
+    void toPanel.offsetHeight;
+    const endHeight = toPanel.getBoundingClientRect().height;
+
+    // Animate height
     if (startHeight !== endHeight) {
       content.setAttribute('data-animating', 'true');
       void content.offsetHeight;
       content.style.height = `${endHeight}px`;
-      await this.#wait(150);
+      await this.#wait(duration);
     }
 
-    // Step 3: Prepare for fade in using inline styles for precise control
-    // Keep the panel invisible during measuring phase
-    toPanel.style.transition = 'none';
+    // Show panel but keep opacity at 0, then fade in
+    toPanel.style.visibility = 'visible';
     toPanel.style.opacity = '0';
-    toPanel.style.position = 'absolute';
-    toPanel.style.top = '0';
-    toPanel.style.left = '0';
-    toPanel.style.right = '0';
-    toPanel.setAttribute('data-state', 'active');
 
-    // Force browser to acknowledge the opacity: 0 state
+    // Ensure the 0-opacity state is committed
     void toPanel.offsetHeight;
 
-    // Wait a frame to ensure paint
-    await this.#nextFrame();
+    try {
+      const fadeIn = toPanel.animate([{ opacity: 0 }, { opacity: 1 }], { duration, easing, fill: 'forwards' });
+      await fadeIn.finished;
+      fadeIn.cancel();
+    } catch {
+      // ignore
+    }
 
-    // Now make it visible and animate to opacity: 1 using inline style
-    toPanel.style.position = '';
-    toPanel.style.top = '';
-    toPanel.style.left = '';
-    toPanel.style.right = '';
-    toPanel.style.transition = `opacity 150ms cubic-bezier(.25, 0, .5, 1)`;
-    toPanel.style.opacity = '1';
+    // Finalize new tab state and cleanup
+    toPanel.style.display = '';
+    toPanel.style.visibility = '';
+    toPanel.style.opacity = '';
 
-    // Wait for fade in
-    await this.#wait(150);
+    // Restore state attribute (we only want one active)
+    if (previousToState !== 'active') {
+      toPanel.setAttribute('data-state', 'active');
+    }
 
-    // Final cleanup - remove inline styles
-    toPanel.style.cssText = '';
     content.style.height = '';
     content.removeAttribute('data-animating');
     this.#isAnimating = false;
 
-    // Re-attach controls for the new tab
     this.#detach();
     this.#attach();
   }

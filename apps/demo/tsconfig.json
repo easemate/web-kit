@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "baseUrl": "./",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/decorators/*"],
+      "~/*": ["./src/*"],
+      "@easemate/shadow": ["../../packages/core/src/index.ts"],
+      "@easemate/shadow/*": ["../../packages/core/src/*"],
+      "@easemate/shadow-ogl": ["../../packages/ogl/src/index.ts"],
+      "@easemate/shadow-ogl/*": ["../../packages/ogl/src/*"],
+      "@easemate/shadow-genie": ["../../packages/genie/src/index.ts"],
+      "@easemate/shadow-genie/*": ["../../packages/genie/src/*"],
+      "@easemate/shadow-motion": ["../../packages/motion/src/index.ts"],
+      "@easemate/shadow-motion/*": ["../../packages/motion/src/*"],
+      "@easemate/shadow-ripple": ["../../packages/ripple/src/index.ts"],
+      "@easemate/shadow-ripple/*": ["../../packages/ripple/src/*"],
+      "@easemate/shadow-fold": ["../../packages/fold/src/index.ts"],
+      "@easemate/shadow-fold/*": ["../../packages/fold/src/*"],
+      "@easemate/shadow-grid": ["../../packages/grid/src/index.ts"],
+      "@easemate/shadow-grid/*": ["../../packages/grid/src/*"],
+      "@easemate/shadow-webgpu": ["../../packages/webgpu/src/index.ts"],
+      "@easemate/shadow-webgpu/*": ["../../packages/webgpu/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "build", "dist"],
+  "include": ["src", "vite.config.ts"]
+}

@@ -20,7 +20,9 @@
       "outputs": []
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^dev"]
     },
     "clean": {
       "cache": false,

@@ -1,14 +1,9 @@
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import swc from 'unplugin-swc';
-import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
-
-const packagesDir = fileURLToPath(new URL('../../packages', import.meta.url));
-
-const packageEntry = (name: string) => resolve(packagesDir, `${name}/src/index.ts`);
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  assetsInclude: ['**/*.svg'],
   plugins: [
     tsconfigPaths(),
     swc.vite({
@@ -25,13 +20,10 @@ export default defineConfig({
       }
     })
   ],
-  root: 'src',
-  resolve: {
-    alias: {
-      '@easemate/web-kit': packageEntry('core'),
-      '@/*': packageEntry('core/src/decorators/*'),
-      '~/*': packageEntry('core/src/*')
-    }
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    include: ['test/**/*.test.ts']
   },
   esbuild: false
 });

@@ -7,8 +7,7 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@web-kit/core": ["packages/core/src/index.ts"],
-      "@web-kit/advanced": ["packages/advanced/src/index.ts"]
+      "@easemate/web-kit": ["packages/core/src/index.ts"]
     },
     "isolatedModules": true,
     "strict": true,

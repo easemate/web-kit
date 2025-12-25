@@ -311,34 +311,81 @@ export interface MonitorFpsProps extends BaseHTMLAttributes {
 }
 
 export interface LogoLoaderProps extends BaseHTMLAttributes {
-  intro?: 'none' | 'simple' | 'full';
-  playing?: boolean;
+  intro?: 'wave' | 'particle';
+  loading?: boolean;
+  size?: number | string;
 }
+
+export interface ColorPickerProps extends BaseHTMLAttributes {
+  ref?: Ref<ColorInputElement>;
+  value?: string;
+  disabled?: boolean;
+  onInput?: CustomEventHandler<ControlEventDetail<string>>;
+  onChange?: CustomEventHandler<ControlEventDetail<string>>;
+}
+
+// Base interface for all icon components
+export interface IconProps extends BaseHTMLAttributes {}
 
 // JSX IntrinsicElements
 export interface EaseElements {
+  // Layout & State
   'ease-state': StateProps;
   'ease-panel': PanelProps;
+  'ease-field': FieldProps;
+  'ease-popover': PopoverProps;
+  'ease-tooltip': TooltipProps;
+
+  // Controls
   'ease-slider': SliderProps;
   'ease-toggle': ToggleProps;
   'ease-checkbox': CheckboxProps;
   'ease-input': InputProps;
   'ease-number-input': NumberInputProps;
   'ease-color-input': ColorInputProps;
-  'ease-color-picker': ColorInputProps;
+  'ease-color-picker': ColorPickerProps;
   'ease-dropdown': DropdownProps;
   'ease-button': ButtonProps;
-  'ease-field': FieldProps;
-  'ease-tooltip': TooltipProps;
-  'ease-popover': PopoverProps;
   'ease-origin': OriginProps;
   'ease-radio-group': RadioGroupProps;
   'ease-radio-input': RadioInputProps;
+
+  // Advanced
   'ease-curve': CurveProps;
   'ease-code': CodeProps;
+
+  // Display
   'ease-monitor': MonitorProps;
   'ease-monitor-fps': MonitorFpsProps;
   'ease-logo-loader': LogoLoaderProps;
+
+  // Icons - Interface
+  'ease-icon-anchor-add': IconProps;
+  'ease-icon-anchor-remove': IconProps;
+  'ease-icon-arrow-up': IconProps;
+  'ease-icon-arrows-vertical': IconProps;
+  'ease-icon-bezier': IconProps;
+  'ease-icon-bezier-angle': IconProps;
+  'ease-icon-bezier-distribute': IconProps;
+  'ease-icon-bezier-length': IconProps;
+  'ease-icon-bezier-mirror': IconProps;
+  'ease-icon-check': IconProps;
+  'ease-icon-circle-arrow-left': IconProps;
+  'ease-icon-circle-arrow-right': IconProps;
+  'ease-icon-code': IconProps;
+  'ease-icon-dots': IconProps;
+  'ease-icon-mention': IconProps;
+  'ease-icon-minus': IconProps;
+  'ease-icon-picker': IconProps;
+  'ease-icon-plus': IconProps;
+  'ease-icon-settings': IconProps;
+
+  // Icons - Animation
+  'ease-icon-chevron': IconProps;
+  'ease-icon-clear': IconProps;
+  'ease-icon-grid': IconProps;
+  'ease-icon-loading': IconProps;
+  'ease-icon-snap': IconProps;
 }
 
 // Augment global JSX namespace

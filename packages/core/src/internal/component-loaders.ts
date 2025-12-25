@@ -174,10 +174,11 @@ export async function loadComponents(tags: readonly WebKitTag[]): Promise<void> 
 }
 
 /**
- * Load all components (equivalent to importing register.ts).
+ * Load all components.
+ * Uses the individual component loaders to ensure all components are registered.
  */
 export async function loadAllComponents(): Promise<void> {
-  await import('../register');
+  await loadComponents(WEB_KIT_ALL_TAGS);
 }
 
 /**

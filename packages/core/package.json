@@ -1,22 +1,12 @@
 {
   "name": "@easemate/web-kit",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "UI kit of web components for easemate - a typescript animation library",
   "type": "module",
   "files": [
     "build"
   ],
-  "sideEffects": [
-    "./build/register.js",
-    "./build/register.cjs",
-    "./build/register.server.js",
-    "./build/register.server.cjs",
-    "./build/react.js",
-    "./build/react.cjs",
-    "./build/jsx.js",
-    "./build/jsx.cjs",
-    "./build/styles/**/*.css"
-  ],
+  "sideEffects": true,
   "scripts": {
     "clean": "rm -rf build",
     "build": "npm run clean && tsup",

@@ -66,6 +66,8 @@ A modern, framework-agnostic UI kit of web components for building animation con
   - [State API](#state-api)
 - [Accessibility](#accessibility)
 - [SSR Support](#ssr-support)
+- [Links](#links)
+- [Authors](#authors)
 - [License](#license)
 
 ---
@@ -186,7 +188,11 @@ The library provides first-class React integration via `@easemate/web-kit/react`
 
 ### JSX Types
 
-Importing `@easemate/web-kit/react` automatically adds JSX types for all `ease-*` custom elements:
+Importing `@easemate/web-kit/react` automatically adds JSX types for all `ease-*` custom elements, including:
+- All control components (`ease-slider`, `ease-toggle`, `ease-input`, etc.)
+- Layout components (`ease-panel`, `ease-state`, `ease-field`, etc.)
+- Advanced components (`ease-curve`, `ease-code`, `ease-monitor-fps`, etc.)
+- All icon components (`ease-icon-settings`, `ease-icon-bezier`, etc.)
 
 ```tsx
 import '@easemate/web-kit/react';
@@ -197,10 +203,24 @@ import '@easemate/web-kit/react';
 </ease-panel>
 ```
 
-You can also import just the JSX types separately:
+You can also import just the JSX types separately (useful for type-only imports):
 
 ```tsx
 import '@easemate/web-kit/react/jsx';
+```
+
+The types include proper ref types for accessing component methods:
+
+```tsx
+import type { StateElement, PanelElement } from '@easemate/web-kit/react';
+
+const stateRef = useRef<StateElement>(null);
+const panelRef = useRef<PanelElement>(null);
+
+// Access typed methods
+stateRef.current?.get('volume');
+stateRef.current?.reset();
+panelRef.current?.setActiveTab(1);
 ```
 
 ### Basic Setup
@@ -462,13 +482,39 @@ const handleChange = createEventHandler<ControlChangeEvent>((e) => {
 
 ### Icons
 
-All icon components follow the pattern `<ease-icon-*>`:
+All icon components follow the pattern `<ease-icon-*>`. All icons are typed in JSX when importing `@easemate/web-kit/react`.
 
-- `ease-icon-settings`, `ease-icon-dots`, `ease-icon-plus`, `ease-icon-minus`
-- `ease-icon-check`, `ease-icon-chevron`, `ease-icon-code`
-- `ease-icon-bezier`, `ease-icon-bezier-*` (bezier tools)
-- `ease-icon-anchor-add`, `ease-icon-anchor-remove`
-- And more...
+**Interface Icons:**
+| Tag | Description |
+|-----|-------------|
+| `ease-icon-settings` | Settings gear icon |
+| `ease-icon-dots` | Three dots / more menu icon |
+| `ease-icon-plus` | Plus / add icon |
+| `ease-icon-minus` | Minus / remove icon |
+| `ease-icon-check` | Checkmark icon |
+| `ease-icon-code` | Code brackets icon |
+| `ease-icon-picker` | Eyedropper picker icon |
+| `ease-icon-mention` | @ mention icon |
+| `ease-icon-arrow-up` | Up arrow icon |
+| `ease-icon-arrows-vertical` | Vertical arrows icon |
+| `ease-icon-circle-arrow-left` | Left arrow in circle |
+| `ease-icon-circle-arrow-right` | Right arrow in circle |
+| `ease-icon-anchor-add` | Add anchor point |
+| `ease-icon-anchor-remove` | Remove anchor point |
+| `ease-icon-bezier` | Bezier curve icon |
+| `ease-icon-bezier-angle` | Bezier angle tool |
+| `ease-icon-bezier-distribute` | Distribute bezier points |
+| `ease-icon-bezier-length` | Bezier length tool |
+| `ease-icon-bezier-mirror` | Mirror bezier handles |
+
+**Animation Icons:**
+| Tag | Description |
+|-----|-------------|
+| `ease-icon-chevron` | Animated chevron (expands/collapses) |
+| `ease-icon-clear` | Animated clear/X icon |
+| `ease-icon-grid` | Animated grid icon |
+| `ease-icon-loading` | Animated loading spinner |
+| `ease-icon-snap` | Animated snap indicator |
 
 ---
 
@@ -1060,14 +1106,14 @@ interface WebKitController {
 
 | Export | Description |
 |--------|-------------|
-| `@easemate/web-kit` | Main entry (initWebKit + theme + types) |
-| `@easemate/web-kit/react` | React hooks, utilities, and JSX types |
-| `@easemate/web-kit/react/jsx` | JSX type augmentation only |
-| `@easemate/web-kit/register` | Side-effect registration (all components) |
-| `@easemate/web-kit/elements` | UI components only |
-| `@easemate/web-kit/decorators` | Component decorators |
-| `@easemate/web-kit/theme` | Theming utilities |
-| `@easemate/web-kit/utils` | Utility functions |
+| `@easemate/web-kit` | Main entry: `initWebKit()`, theme utilities, and all types |
+| `@easemate/web-kit/react` | React hooks (`useWebKit`, `useEaseState`), provider, event utilities, and JSX types |
+| `@easemate/web-kit/react/jsx` | JSX type augmentation only (for TypeScript) |
+| `@easemate/web-kit/register` | Side-effect import that registers all components (SSR-safe) |
+| `@easemate/web-kit/elements` | Individual element classes (`Button`, `Slider`, `Panel`, etc.) |
+| `@easemate/web-kit/decorators` | `@Component`, `@Prop`, `@Watch`, `@Listen`, `@Query` decorators |
+| `@easemate/web-kit/theme` | Theme API: `applyTheme`, `createTheme`, `mergeTheme`, `registerTheme` |
+| `@easemate/web-kit/utils` | Template helpers: `classMap`, `styleMap`, `when`, `repeat`, etc. |
 
 ### Panel API
 
@@ -1206,6 +1252,42 @@ const { ready, theme } = useWebKitContext();
 ```
 
 ---
+
+## Links
+
+- [Website](https://ease.dev)
+- [Demo](https://ease.zip)
+- [𝕏](https://x.com/@easemate)
+- [GitHub](https://github.com/easemate)
+- [npm](https://www.npmjs.com/package/@easemate/web-kit)
+
+## Authors
+
+<p><strong>Aaron Iker</strong></p>
+<p valign="center">
+  <a href="https://x.com/aaroniker">
+    <img valign="top" src="https://img.shields.io/badge/@aaroniker-black?style=flat-square&logo=x" alt="X">
+  </a>
+  <span valign="center">&nbsp; • &nbsp;</span>
+  <a href="https://github.com/aaroniker">
+    <img valign="top" src="https://img.shields.io/badge/GitHub-aaroniker-black?style=flat-square&logo=github" alt="GitHub">
+  </a>
+  <span valign="center">&nbsp; • &nbsp;</span>
+  <a href="https://www.linkedin.com/in/aaron-iker-15606897/">
+    <img valign="top" src="https://img.shields.io/badge/LinkedIn-aaroniker-blue?style=flat-square&logo=linkedin" alt="LinkedIn">
+  </a>
+</p>
+
+<p><strong>Jakub Antalik</strong></p>
+<p valign="center">
+  <a href="https://x.com/jakubantalik">
+    <img valign="top" src="https://img.shields.io/badge/@jakubantalik-black?style=flat-square&logo=x" alt="X">
+  </a>
+  <span valign="center">&nbsp; • &nbsp;</span>
+  <a href="https://www.linkedin.com/in/jakubantalik/">
+    <img valign="top" src="https://img.shields.io/badge/LinkedIn-jakubantalik-blue?style=flat-square&logo=linkedin" alt="LinkedIn">
+  </a>
+</p>
 
 ## License
 

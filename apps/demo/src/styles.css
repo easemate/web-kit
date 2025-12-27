@@ -63,7 +63,6 @@ main {
 /* Standalone State Demo */
 .standalone-demo {
   grid-column: 1 / -1;
-  padding: 24px;
   background: var(--color-gray-900);
   border-radius: var(--radii-lg);
 }

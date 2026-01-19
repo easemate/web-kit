@@ -1,5 +1,6 @@
 export * from './animation/chevron';
 export * from './animation/clear';
+export * from './animation/folder';
 export * from './animation/grid';
 export * from './animation/loading';
 export * from './animation/snap';

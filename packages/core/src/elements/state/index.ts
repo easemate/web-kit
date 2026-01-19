@@ -101,7 +101,7 @@ const getControlName = (element: ControlElement): string | null => {
 
     [part="container"] {
       display: grid;
-      gap: var(--ease-state-gap, 12px);
+      grid-gap: var(--ease-panel-gap);
       box-sizing: border-box;
       width: 100%;
     }

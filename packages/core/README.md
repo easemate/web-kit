@@ -41,6 +41,7 @@ A modern, framework-agnostic UI kit of web components for building animation con
 - [Usage Examples](#usage-examples)
   - [Basic Controls](#basic-controls)
   - [Panel Component](#panel-component)
+  - [Folder Component](#folder-component)
   - [State Component](#state-component)
   - [Combined Panel + State](#combined-panel--state)
   - [JavaScript Integration](#javascript-integration)
@@ -63,6 +64,7 @@ A modern, framework-agnostic UI kit of web components for building animation con
   - [Controller API](#controller-api)
   - [Package Exports](#package-exports)
   - [Panel API](#panel-api)
+  - [Folder API](#folder-api)
   - [State API](#state-api)
 - [Accessibility](#accessibility)
 - [SSR Support](#ssr-support)
@@ -344,8 +346,7 @@ function AnimationControls() {
   );
 
   return (
-    <ease-panel ref={panelRef}>
-      <span slot="headline">Animation</span>
+    <ease-panel ref={panelRef} headline="Animation">
       <ease-state ref={stateRef}>
         <ease-field label="Duration">
           <ease-slider name="duration" value="1" min="0" max="5" step="0.1" />
@@ -464,6 +465,7 @@ const handleChange = createEventHandler<ControlChangeEvent>((e) => {
 | Component | Tag | Description |
 |-----------|-----|-------------|
 | Panel | `<ease-panel>` | Visual container with tabs, header, and footer |
+| Folder | `<ease-folder>` | Collapsible container for grouping controls |
 | State | `<ease-state>` | State aggregator for controls (no visual styling) |
 | Field | `<ease-field>` | Label + control wrapper |
 | Button | `<ease-button>` | Action button |
@@ -512,6 +514,7 @@ All icon components follow the pattern `<ease-icon-*>`. All icons are typed in J
 |-----|-------------|
 | `ease-icon-chevron` | Animated chevron (expands/collapses) |
 | `ease-icon-clear` | Animated clear/X icon |
+| `ease-icon-folder` | Animated folder open/close icon |
 | `ease-icon-grid` | Animated grid icon |
 | `ease-icon-loading` | Animated loading spinner |
 | `ease-icon-snap` | Animated snap indicator |
@@ -536,15 +539,14 @@ The `<ease-panel>` component provides the visual container with optional tabs, h
 
 ```html
 <!-- Simple panel with headline -->
-<ease-panel>
-  <span slot="headline">Settings</span>
+<ease-panel headline="Settings">
   <div>
     <!-- Your content here -->
   </div>
 </ease-panel>
 
 <!-- Panel with tabs -->
-<ease-panel active-tab="0">
+<ease-panel headline="Animation" active-tab="0">
   <div slot="tab-general" data-tab-label="General">
     <!-- General settings -->
   </div>
@@ -554,8 +556,7 @@ The `<ease-panel>` component provides the visual container with optional tabs, h
 </ease-panel>
 
 <!-- Panel with header actions -->
-<ease-panel>
-  <span slot="headline">Controls</span>
+<ease-panel headline="Controls">
   <button slot="actions" title="Settings">
     <ease-icon-settings></ease-icon-settings>
   </button>
@@ -566,6 +567,40 @@ The `<ease-panel>` component provides the visual container with optional tabs, h
     <ease-button>Save</ease-button>
   </div>
 </ease-panel>
+
+<!-- Panel with max-height (scrollable) -->
+<ease-panel headline="Scrollable Panel" max-height="250px">
+  <!-- Content will scroll when it exceeds 250px -->
+</ease-panel>
+```
+
+### Folder Component
+
+The `<ease-folder>` component provides a collapsible container for grouping controls. Click the header to toggle open/closed.
+
+```html
+<!-- Basic folder (closed by default) -->
+<ease-folder headline="Transform">
+  <ease-field label="X">
+    <ease-number-input name="x" value="0"></ease-number-input>
+  </ease-field>
+  <ease-field label="Y">
+    <ease-number-input name="y" value="0"></ease-number-input>
+  </ease-field>
+</ease-folder>
+
+<!-- Open folder -->
+<ease-folder open headline="Appearance">
+  <ease-field label="Color">
+    <ease-color-input name="color" value="#3b82f6"></ease-color-input>
+  </ease-field>
+</ease-folder>
+
+<!-- Folder with max-height (scrollable with fade masks) -->
+<ease-folder headline="Animation" max-height="150px">
+  <!-- Many fields here will scroll with fade effect -->
+</ease-folder>
+
 ```
 
 ### State Component
@@ -595,9 +630,7 @@ The `<ease-state>` component aggregates state from child controls. It can be use
 For a complete control panel experience, combine `<ease-panel>` with `<ease-state>`:
 
 ```html
-<ease-panel>
-  <span slot="headline">Animation Controls</span>
-  
+<ease-panel headline="Animation Controls">
   <button slot="actions" title="Reset">
     <ease-icon-minus></ease-icon-minus>
   </button>
@@ -631,7 +664,7 @@ For a complete control panel experience, combine `<ease-panel>` with `<ease-stat
 When using tabs with state, place the `<ease-state>` inside each tab:
 
 ```html
-<ease-panel active-tab="0">
+<ease-panel headline="Animation" active-tab="0">
   <button slot="actions" title="Reset">
     <ease-icon-minus></ease-icon-minus>
   </button>
@@ -1074,12 +1107,12 @@ setThemeName('light', { colorScheme: 'light' });
 | Category | Variables |
 |----------|-----------|
 | Typography | `--ease-font-family`, `--ease-font-mono`, `--ease-font-size`, `--ease-line-height` |
-| Panel | `--ease-panel-max-width`, `--ease-panel-padding`, `--ease-panel-radius`, `--ease-panel-background`, `--ease-panel-border-color`, `--ease-panel-shadow` |
-| Panel Title | `--ease-panel-title-font-size`, `--ease-panel-title-font-weight`, `--ease-panel-title-line-height`, `--ease-panel-title-color` |
-| Panel Tabs | `--ease-panel-tab-font-size`, `--ease-panel-tab-font-weight`, `--ease-panel-tab-line-height`, `--ease-panel-tab-color`, `--ease-panel-tab-color-hover`, `--ease-panel-tab-color-active`, `--ease-panel-tab-background-active`, `--ease-panel-tab-radius` |
+| Panel | `--ease-panel-max-width`, `--ease-panel-padding`, `--ease-panel-radius`, `--ease-panel-background`, `--ease-panel-border-color`, `--ease-panel-shadow`, `--ease-panel-gap`, `--ease-panel-header-spacing`, `--ease-panel-fade-size` |
+| Panel Title | `--ease-panel-title-font-size`, `--ease-panel-title-font-weight`, `--ease-panel-title-color` |
+| Panel Tabs | `--ease-panel-tab-font-size`, `--ease-panel-tab-font-weight`, `--ease-panel-tab-color`, `--ease-panel-tab-color-hover`, `--ease-panel-tab-color-active`, `--ease-panel-tab-background-active`, `--ease-panel-tab-radius` |
 | Panel Actions | `--ease-panel-action-icon-size` |
 | Panel Footer | `--ease-panel-footer-padding` |
-| Panel Transitions | `--ease-panel-transition-duration`, `--ease-panel-transition-easing` |
+| Folder | `--ease-folder-padding`, `--ease-folder-radius`, `--ease-folder-border-color`, `--ease-folder-background`, `--ease-folder-shadow`, `--ease-folder-gap`, `--ease-folder-title-font-size`, `--ease-folder-title-font-weight`, `--ease-folder-title-color`, `--ease-folder-icon-color`, `--ease-folder-chevron-color`, `--ease-folder-chevron-color-hover`, `--ease-folder-fade-size` |
 | Field | `--ease-field-label-width`, `--ease-field-column-gap`, `--ease-field-row-gap` |
 | Controls | Each control exposes `--ease-<component>-*` tokens |
 
@@ -1123,7 +1156,9 @@ The `<ease-panel>` component provides the visual container.
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
+| `headline` | `string \| null` | `null` | Panel title text displayed in the header |
 | `activeTab` | `number` | `0` | Zero-based index of the active tab |
+| `maxHeight` | `string \| null` | `null` | Maximum height for scrollable content (e.g., "250px") |
 
 #### Methods
 
@@ -1135,7 +1170,6 @@ The `<ease-panel>` component provides the visual container.
 
 | Slot | Description |
 |------|-------------|
-| `headline` | Panel title text (hidden when tabs are present) |
 | `actions` | Header action buttons, links, or dropdowns |
 | (default) | Main content area (used when no tabs) |
 | `tab-{id}` | Tab panel content (use `data-tab-label` for display name) |
@@ -1152,7 +1186,8 @@ The `<ease-panel>` component provides the visual container.
 | `tab` | Individual tab button |
 | `actions` | Actions container |
 | `content` | Content wrapper (handles height animations) |
-| `body` | Inner body container |
+| `body` | Inner body container (scrollable when max-height is set) |
+| `items` | Grid container for slotted content |
 | `tab-panel` | Individual tab panel |
 | `footer` | Footer container |
 
@@ -1169,6 +1204,59 @@ interface TabChangeEventDetail {
   event: Event;              // Original event
 }
 ```
+
+### Folder API
+
+The `<ease-folder>` component provides a collapsible container for grouping controls.
+
+#### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `headline` | `string \| null` | `null` | Folder title text displayed in the header |
+| `open` | `boolean` | `false` | Whether the folder is expanded |
+| `maxHeight` | `string \| null` | `null` | Maximum height for scrollable content (e.g., "150px") |
+
+#### Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `toggle` | `() => void` | Toggle the folder open/closed state |
+
+#### Slots
+
+| Slot | Description |
+|------|-------------|
+| (default) | Folder content (fields and controls) |
+
+#### CSS Parts
+
+| Part | Description |
+|------|-------------|
+| `section` | Outer container |
+| `header` | Clickable header row |
+| `icon` | Folder icon |
+| `headline` | Title element |
+| `chevron` | Chevron icon (toggle indicator) |
+| `content` | Content wrapper (handles height animations) |
+| `body` | Inner body container (scrollable when max-height is set) |
+
+#### Events
+
+| Event | Detail Type | Description |
+|-------|-------------|-------------|
+| `folder-toggle` | `FolderToggleEventDetail` | Fired when the folder is opened or closed |
+
+```typescript
+interface FolderToggleEventDetail {
+  open: boolean;             // Whether the folder is now open
+  event: Event;              // Original event
+}
+```
+
+#### Scrollable Content
+
+When `max-height` is set, the folder content becomes scrollable with fade gradient masks at the top and bottom edges. The masks automatically appear/disappear based on scroll position using scroll-driven animations.
 
 ### State API
 

@@ -25,8 +25,7 @@
     </section>
 
     <!-- Example 1: Basic panel with state and button actions -->
-    <ease-panel>
-      <span slot="headline">Overview</span>
+    <ease-panel headline="Overview">
       <button slot="actions" aria-label="Settings">
         <ease-icon-settings></ease-icon-settings>
       </button>
@@ -76,8 +75,7 @@
     </ease-panel>
 
     <!-- Example 2: Panel with dropdown and link actions -->
-    <ease-panel>
-      <span slot="headline">Easing</span>
+    <ease-panel headline="Easing">
       <!-- Link action - redirects to URL -->
       <a slot="actions" href="https://cubic-bezier.com" target="_blank" rel="noopener" aria-label="Open bezier editor">
         <ease-icon-bezier></ease-icon-bezier>
@@ -103,7 +101,7 @@
     </ease-panel>
 
     <!-- Example 3: Panel with tabs (up to 3 tabs) -->
-    <ease-panel id="tabbed-panel">
+    <ease-panel id="tabbed-panel" headline="Animation">
       <!-- Tab 1: General settings -->
       <ease-state slot="tab-general" data-tab-label="General">
         <ease-field label="Name">
@@ -162,7 +160,7 @@
     </ease-panel>
 
     <!-- Example 4: Panel with 2 tabs only -->
-    <ease-panel>
+    <ease-panel headline="Input">
       <!-- Tab 1: Input -->
       <ease-state slot="tab-input" data-tab-label="Input">
         <ease-field label="Value">
@@ -203,6 +201,103 @@
         </ease-field>
       </ease-state>
     </section>
+
+    <!-- Example 6: Panel with folders -->
+    <ease-panel headline="Folders Demo">
+
+      <ease-state>
+        <!-- Basic folder -->
+        <ease-folder open headline="Transform">
+          <ease-field label="X">
+            <ease-number-input name="folder-x" value="0"></ease-number-input>
+          </ease-field>
+          <ease-field label="Y">
+            <ease-number-input name="folder-y" value="0"></ease-number-input>
+          </ease-field>
+          <ease-field label="Scale">
+            <ease-slider name="folder-scale" value="100" min="0" max="200" step="1"></ease-slider>
+          </ease-field>
+        </ease-folder>
+
+        <!-- Closed folder by default -->
+        <ease-folder headline="Appearance">
+          <ease-field label="Color">
+            <ease-color-input name="folder-color" value="#3b82f6"></ease-color-input>
+          </ease-field>
+          <ease-field label="Opacity">
+            <ease-slider name="folder-opacity" value="100" min="0" max="100" step="1"></ease-slider>
+          </ease-field>
+          <ease-field label="Visible">
+            <ease-toggle name="folder-visible" checked></ease-toggle>
+          </ease-field>
+        </ease-folder>
+
+        <!-- Folder with max-height and scrollable content -->
+        <ease-folder max-height="150px" headline="Animation (scrollable)">
+          <ease-field label="Duration">
+            <ease-number-input name="folder-anim-duration" value="300" min="0" max="5000" step="50"></ease-number-input>
+          </ease-field>
+          <ease-field label="Delay">
+            <ease-number-input name="folder-anim-delay" value="0" min="0" max="2000" step="50"></ease-number-input>
+          </ease-field>
+          <ease-field label="Easing">
+            <ease-dropdown name="folder-anim-easing" value="ease-out">
+              <button slot="content" value="linear">Linear</button>
+              <button slot="content" value="ease-in">Ease In</button>
+              <button slot="content" value="ease-out">Ease Out</button>
+              <button slot="content" value="ease-in-out">Ease In-Out</button>
+            </ease-dropdown>
+          </ease-field>
+          <ease-field label="Direction">
+            <ease-dropdown name="folder-anim-direction" value="normal">
+              <button slot="content" value="normal">Normal</button>
+              <button slot="content" value="reverse">Reverse</button>
+              <button slot="content" value="alternate">Alternate</button>
+            </ease-dropdown>
+          </ease-field>
+          <ease-field label="Loop">
+            <ease-toggle name="folder-anim-loop"></ease-toggle>
+          </ease-field>
+          <ease-field label="Auto Play">
+            <ease-toggle name="folder-anim-autoplay" checked></ease-toggle>
+          </ease-field>
+        </ease-folder>
+      </ease-state>
+    </ease-panel>
+
+    <!-- Example 7: Panel with max-height (scrollable) -->
+    <ease-panel max-height="250px" headline="Scrollable Panel"  >
+      <button slot="actions" aria-label="Settings">
+        <ease-icon-settings></ease-icon-settings>
+      </button>
+
+      <ease-state>
+        <ease-field label="Field 1">
+          <ease-slider name="scroll-field-1" value="50" min="0" max="100"></ease-slider>
+        </ease-field>
+        <ease-field label="Field 2">
+          <ease-slider name="scroll-field-2" value="25" min="0" max="100"></ease-slider>
+        </ease-field>
+        <ease-field label="Field 3">
+          <ease-toggle name="scroll-field-3" checked></ease-toggle>
+        </ease-field>
+        <ease-field label="Field 4">
+          <ease-color-input name="scroll-field-4" value="#ff6b6b"></ease-color-input>
+        </ease-field>
+        <ease-field label="Field 5">
+          <ease-number-input name="scroll-field-5" value="42" min="0" max="100"></ease-number-input>
+        </ease-field>
+        <ease-field label="Field 6">
+          <ease-input name="scroll-field-6" value="Hello World"></ease-input>
+        </ease-field>
+        <ease-field label="Field 7">
+          <ease-slider name="scroll-field-7" value="75" min="0" max="100"></ease-slider>
+        </ease-field>
+        <ease-field label="Field 8">
+          <ease-toggle name="scroll-field-8"></ease-toggle>
+        </ease-field>
+      </ease-state>
+    </ease-panel>
   </main>
 
   <script type="module" src="./index.ts"></script>

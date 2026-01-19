@@ -26,6 +26,39 @@ export const defaultEaseVars: ThemeVars = {
   '--ease-panel-title-line-height': '24px',
   '--ease-panel-title-color': 'var(--color-blue-100)',
 
+  // Panel additional tokens
+  '--ease-panel-gap': 'var(--spacing-md)',
+  '--ease-panel-headline-font-size': 'var(--ease-font-size)',
+  '--ease-panel-headline-font-weight': '500',
+  '--ease-panel-headline-line-height': '24px',
+  '--ease-panel-headline-color': 'var(--color-blue-100)',
+  '--ease-panel-header-spacing': 'var(--spacing-sm)',
+  '--ease-panel-fade-size': '12px',
+
+  // Panel tab tokens
+  '--ease-panel-tab-font-size': 'var(--ease-font-size)',
+  '--ease-panel-tab-font-weight': '500',
+  '--ease-panel-tab-color': 'var(--color-gray-600)',
+  '--ease-panel-tab-color-hover': 'var(--color-blue-100)',
+  '--ease-panel-tab-color-active': 'var(--color-blue-100)',
+  '--ease-panel-tab-background-active': 'var(--color-white-4)',
+  '--ease-panel-tab-radius': 'var(--radii-sm)',
+
+  // Folder (ease-folder)
+  '--ease-folder-padding': 'var(--spacing-sm)',
+  '--ease-folder-radius': 'var(--radii-md)',
+  '--ease-folder-border-color': 'var(--color-white-4)',
+  '--ease-folder-background': 'var(--color-white-1)',
+  '--ease-folder-shadow': '0 0 24px 0 var(--color-white-2) inset',
+  '--ease-folder-icon-color': 'var(--color-gray-0)',
+  '--ease-folder-chevron-color': 'var(--color-gray-600)',
+  '--ease-folder-chevron-color-hover': 'var(--color-gray-400)',
+  '--ease-folder-title-font-size': 'var(--ease-font-size)',
+  '--ease-folder-title-font-weight': '500',
+  '--ease-folder-title-color': 'var(--color-gray-400)',
+  '--ease-folder-gap': 'var(--spacing-sm)',
+  '--ease-folder-fade-size': '16px',
+
   // Field (ease-field)
   '--ease-field-label-width': '36%',
   '--ease-field-column-gap': 'var(--spacing-md)',

@@ -30,6 +30,7 @@ export type GrayScale = ColorScale & {
  */
 export type AlphaColors = {
   0?: string;
+  1?: string;
   2?: string;
   4?: string;
   6?: string;
@@ -236,6 +237,7 @@ export const defaultColors: Required<ColorPalette> = {
   black: 'oklab(0% 0 0)',
   whiteAlpha: {
     0: 'oklab(95.14% -0.0013 -0.0186 / 0)',
+    1: 'oklab(95.14% -0.0013 -0.0186 / 0.0125)',
     2: 'oklab(95.14% -0.0013 -0.0186 / 0.02)',
     4: 'oklab(95.14% -0.0013 -0.0186 / 0.04)',
     6: 'oklab(95.14% -0.0013 -0.0186 / 0.06)',

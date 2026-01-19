@@ -1,4 +1,5 @@
 :root,
+:host,
 :where([data-ease-theme='dark']) {
   color-scheme: dark;
   /* Gray Scale */
@@ -83,6 +84,7 @@
 
   /* Misc - Alpha Variations */
   --color-white-0: oklab(95.14% -0.0013 -0.0186 / 0);
+  --color-white-1: oklab(95.14% -0.0013 -0.0186 / 0.0125);
   --color-white-2: oklab(95.14% -0.0013 -0.0186 / 0.02);
   --color-white-4: oklab(95.14% -0.0013 -0.0186 / 0.04);
   --color-white-6: oklab(95.14% -0.0013 -0.0186 / 0.06);
@@ -151,8 +153,31 @@
   --ease-panel-shadow: 0 0 40px 0 var(--color-white-2) inset;
   --ease-panel-title-font-size: 14px;
   --ease-panel-title-font-weight: 500;
-  --ease-panel-title-line-height: 24px;
   --ease-panel-title-color: var(--color-blue-100);
+  --ease-panel-header-spacing: var(--spacing-md);
+  --ease-panel-gap: var(--spacing-md);
+
+  /* Panel Tab */
+  --ease-panel-tab-font-size: var(--ease-font-size);
+  --ease-panel-tab-font-weight: 500;
+  --ease-panel-tab-color: var(--color-gray-600);
+  --ease-panel-tab-color-hover: var(--color-blue-100);
+  --ease-panel-tab-color-active: var(--color-blue-100);
+  --ease-panel-tab-background-active: var(--color-white-4);
+  --ease-panel-tab-radius: var(--radii-sm);
+
+  /* Folder (ease-folder) */
+  --ease-folder-padding: var(--spacing-sm);
+  --ease-folder-radius: var(--radii-md);
+  --ease-folder-border-color: var(--color-white-4);
+  --ease-folder-background: var(--color-white-1);
+  --ease-folder-shadow: 0 0 24px 0 var(--color-white-2) inset;
+  --ease-folder-icon-color: var(--color-gray-0);
+  --ease-folder-chevron-color: var(--color-gray-600);
+  --ease-folder-chevron-color-hover: var(--color-gray-400);
+  --ease-folder-title-font-size: var(--ease-font-size);
+  --ease-folder-title-font-weight: 500;
+  --ease-folder-gap: var(--spacing-sm);
 
   /* Field (ease-field) */
   --ease-field-label-width: 36%;

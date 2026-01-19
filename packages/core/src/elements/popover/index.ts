@@ -2,6 +2,7 @@ import { html, type TemplateResult } from 'lit-html';
 
 import { Component } from '~/decorators/Component';
 import { Prop } from '~/decorators/Prop';
+import { Query } from '~/decorators/Query';
 
 export type Placement =
   | 'top-start'
@@ -17,7 +18,7 @@ export type Placement =
   | 'right-center'
   | 'right-end';
 
-const nextAnchorName = (): string => `--ease-popover-anchor-${crypto.randomUUID()}`;
+const nextAnchorName = (): string => `--ease-popover-anchor-${crypto.randomUUID().slice(0, 8)}`;
 
 @Component({
   tag: 'ease-popover',
@@ -27,7 +28,6 @@ const nextAnchorName = (): string => `--ease-popover-anchor-${crypto.randomUUID(
     :host {
       display: contents;
       --ease-popover-offset: 8px;
-      --ease-popover-anchor-name: --ease-popover-anchor;
       --ease-popover-transform-origin: center center;
       --ease-popover-duration: 200ms;
       --ease-popover-content-min-width: auto;
@@ -40,125 +40,84 @@ const nextAnchorName = (): string => `--ease-popover-anchor-${crypto.randomUUID(
     }
 
     [part="content"] {
-      position-anchor: var(--ease-popover-anchor-name);
       position: fixed;
+      position-anchor: var(--ease-popover-anchor-name);
       margin: 0;
-      transform-origin: var(--ease-popover-transform-origin);
+      padding: 0;
+      border: none;
+      background: transparent;
+      overflow: visible;
       width: var(--ease-popover-content-width);
       min-width: var(--ease-popover-content-min-width);
       max-width: var(--ease-popover-content-max-width);
       box-sizing: border-box;
-      overscroll-behavior: contain;
-      z-index: 100;
-      display: none;
     }
 
-    :host([open]) [part="content"] {
+    [part="content"]:popover-open {
       display: block;
     }
 
     :host([placement="top-start"]) [part="content"] {
-      position-area: top right;
-      top: anchor(bottom);
-      left: anchor(left);
-      translate: 0 calc(var(--ease-popover-offset) * -1);
+      position-area: top span-right;
+      margin-bottom: var(--ease-popover-offset);
     }
-
     :host([placement="top-center"]) [part="content"] {
       position-area: top center;
-      top: anchor(top);
-      left: anchor(center);
-      translate: 0 calc(var(--ease-popover-offset) * -1);
+      margin-bottom: var(--ease-popover-offset);
     }
-
     :host([placement="top-end"]) [part="content"] {
-      position-area: top right;
-      top: anchor(bottom);
-      right: anchor(right);
-      translate: 0 calc(var(--ease-popover-offset) * -1);
+      position-area: top span-left;
+      margin-bottom: var(--ease-popover-offset);
     }
-
     :host([placement="bottom-start"]) [part="content"] {
-      position-area: bottom right;
-      top: anchor(bottom);
-      left: anchor(left);
-      translate: 0 var(--ease-popover-offset);
+      position-area: bottom span-right;
+      margin-top: var(--ease-popover-offset);
     }
-
     :host([placement="bottom-center"]) [part="content"] {
       position-area: bottom center;
-      top: anchor(bottom);
-      left: anchor(left);
-      translate: 0 var(--ease-popover-offset);
+      margin-top: var(--ease-popover-offset);
     }
-
     :host([placement="bottom-end"]) [part="content"] {
-      position-area: bottom left;
-      top: anchor(bottom);
-      right: anchor(right);
-      translate: 0 var(--ease-popover-offset);
+      position-area: bottom span-left;
+      margin-top: var(--ease-popover-offset);
     }
-
     :host([placement="left-start"]) [part="content"] {
-      position-area: left bottom;
-      top: anchor(top);
-      left: anchor(left);
-      translate: calc(var(--ease-popover-offset) * -1) 0;
+      position-area: left span-bottom;
+      margin-right: var(--ease-popover-offset);
     }
-
     :host([placement="left-center"]) [part="content"] {
       position-area: left center;
-      top: anchor(top);
-      left: anchor(left);
-      translate: calc(var(--ease-popover-offset) * -1) 0;
+      margin-right: var(--ease-popover-offset);
     }
-
     :host([placement="left-end"]) [part="content"] {
-      position-area: left top;
-      top: anchor(top);
-      left: anchor(left);
-      translate: calc(var(--ease-popover-offset) * -1) 0;
+      position-area: left span-top;
+      margin-right: var(--ease-popover-offset);
     }
-
     :host([placement="right-start"]) [part="content"] {
-      position-area: right end;
-      top: anchor(top);
-      left: anchor(right);
-      translate: var(--ease-popover-offset) 0;
+      position-area: right span-bottom;
+      margin-left: var(--ease-popover-offset);
     }
-
     :host([placement="right-center"]) [part="content"] {
       position-area: right center;
-      top: anchor(top);
-      left: anchor(right);
-      translate: var(--ease-popover-offset) 0;
+      margin-left: var(--ease-popover-offset);
     }
-
     :host([placement="right-end"]) [part="content"] {
-      position-area: right start;
-      top: anchor(top);
-      left: anchor(right);
-      translate: var(--ease-popover-offset) 0;
+      position-area: right span-top;
+      margin-left: var(--ease-popover-offset);
     }
   `
 })
 export class Popover extends HTMLElement {
-  #anchorName = nextAnchorName();
-  #contentElement: HTMLElement | null = null;
-  #initialized = false;
-
   declare requestRender: () => void;
 
-  public get contentElement(): HTMLElement | null {
-    return this.#contentElement;
-  }
+  #anchorName = nextAnchorName();
+
+  @Query<HTMLElement>('[part="content"]')
+  accessor contentElement!: HTMLElement | null;
 
   @Prop<Placement>({
     reflect: true,
-    defaultValue: 'bottom-start',
-    onChange() {
-      (this as Popover).handlePlacementChange();
-    }
+    defaultValue: 'bottom-start'
   })
   accessor placement!: Placement;
 
@@ -172,64 +131,54 @@ export class Popover extends HTMLElement {
   })
   accessor offset = 8;
 
-  @Prop<boolean>({ type: Boolean, reflect: true })
+  @Prop<boolean>({
+    type: Boolean,
+    reflect: true,
+    onChange() {
+      (this as Popover).handleOpenChange();
+    }
+  })
   accessor open = false;
 
-  connectedCallback(): void {
-    this.#syncAnchorName();
-    this.#syncOffset();
+  handleOffsetChange(): void {
+    const offset = Number.isFinite(this.offset) ? this.offset : 8;
+    this.style.setProperty('--ease-popover-offset', `${offset}px`);
   }
 
-  disconnectedCallback(): void {
-    this.#contentElement = null;
-    this.#initialized = false;
+  handleOpenChange(): void {
+    const content = this.contentElement;
+    if (!content) {
+      return;
+    }
+
+    if (this.open) {
+      content.showPopover();
+    } else {
+      content.hidePopover();
+    }
+  }
+
+  connectedCallback(): void {
+    this.style.setProperty('--ease-popover-anchor-name', this.#anchorName);
+    this.handleOffsetChange();
+  }
+
+  afterRender(): void {
+    const content = this.contentElement;
+    if (content && this.open) {
+      try {
+        content.showPopover();
+      } catch (_e) {}
+    }
   }
 
   render(): TemplateResult {
     return html`
-      <slot slot="trigger" name="trigger"></slot>
-      <div
-        part="content"
-        data-popover-content
-        role="region"
-        data-placement=${this.placement}
-      >
+      <slot name="trigger"></slot>
+      <div part="content" popover="manual" role="region">
         <slot></slot>
       </div>
     `;
-  }
-
-  handlePlacementChange(): void {
-    if (!this.#initialized) {
-      this.requestRender();
-      return;
-    }
-    this.#syncPlacement();
-  }
-
-  handleOffsetChange(): void {
-    if (!this.#initialized) {
-      this.requestRender();
-      return;
-    }
-    this.#syncOffset();
-  }
-
-  #syncPlacement(): void {
-    this.dataset.placement = this.placement;
-
-    if (this.#contentElement) {
-      this.#contentElement.dataset.placement = this.placement;
-    }
-  }
-
-  #syncOffset(): void {
-    const offset = Number.isFinite(this.offset) ? this.offset : 0;
-    this.style.setProperty('--ease-popover-offset', `${offset}px`);
-  }
-
-  #syncAnchorName(): void {
-    this.style.setProperty('--ease-popover-anchor-name', this.#anchorName);
   }
 }
 

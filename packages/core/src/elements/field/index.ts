@@ -14,6 +14,7 @@ import { Prop } from '~/decorators/Prop';
     }
 
     [part="field"] {
+      scroll-snap-align: start;
       display: grid;
       grid-template-columns: var(--ease-field-label-width, 36%) auto;
       column-gap: var(--ease-field-column-gap, 12px);

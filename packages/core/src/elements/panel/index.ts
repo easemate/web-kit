@@ -41,6 +41,7 @@ export interface TabChangeEventDetail {
  * @csspart actions - Actions container
  * @csspart content - Content wrapper (handles height animations)
  * @csspart body - Inner body container
+ * @csspart items - Grid container for slotted content
  * @csspart tab-panel - Individual tab panel
  * @csspart footer - Footer container
  *
@@ -50,22 +51,29 @@ export interface TabChangeEventDetail {
   tag: 'ease-panel',
   shadowMode: 'open',
   styles: `
-    :host {
-      --ease-panel-transition-duration: 120ms;
-      --ease-panel-transition-easing: cubic-bezier(.25, 0, .5, 1);
+    @property --top-fade {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 0px;
+    }
+
+    @property --bottom-fade {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 0px;
     }
 
     [part="section"] {
       display: block;
       width: 100%;
-      max-width: var(--ease-panel-max-width, 332px);
-      border-radius: var(--ease-panel-radius, 12px);
-      border: 1px solid var(--ease-panel-border-color, var(--color-white-6));
+      max-width: var(--ease-panel-max-width);
+      border-radius: var(--ease-panel-radius);
+      border: 1px solid var(--ease-panel-border-color);
       background-clip: padding-box;
-      background: var(--ease-panel-background, var(--color-gray-1000));
-      box-shadow: var(--ease-panel-shadow, 0 0 40px 0 var(--color-white-2) inset);
+      background-color: var(--ease-panel-background);
+      box-shadow: var(--ease-panel-shadow);
       box-sizing: border-box;
-      padding: var(--ease-panel-padding, 12px);
+      padding: var(--ease-panel-padding);
       margin: auto;
     }
 
@@ -74,7 +82,7 @@ export interface TabChangeEventDetail {
       align-items: center;
       gap: 8px;
       width: 100%;
-      margin-bottom: 12px;
+      margin-bottom: var(--ease-panel-header-spacing);
     }
 
     [part="header"]:not(:has([part="headline"] slot[name="headline"]::slotted(*))):not(:has([part="tabs"]:not(:empty))):not(:has([part="actions"] slot[name="actions"]::slotted(*))) {
@@ -83,14 +91,14 @@ export interface TabChangeEventDetail {
     }
 
     [part="headline"] {
-      font-size: var(--ease-panel-title-font-size, 14px);
-      font-weight: var(--ease-panel-title-font-weight, 500);
-      line-height: var(--ease-panel-title-line-height, 24px);
-      font-family: var(--ease-font-family, "Instrument Sans", sans-serif);
-      color: var(--ease-panel-title-color, var(--color-blue-100));
+      font-size: var(--ease-panel-title-font-size);
+      font-weight: var(--ease-panel-title-font-weight);
+      line-height: 24px;
+      font-family: var(--ease-font-family);
+      color: var(--ease-panel-title-color);
       margin: 0 0 0 4px;
       flex-grow: 1;
-      text-ellipsis: ellipsis;
+      text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
     }
@@ -113,27 +121,28 @@ export interface TabChangeEventDetail {
 
     [part="tab"] {
       appearance: none;
-      font-size: var(--ease-panel-tab-font-size, 13px);
-      font-weight: var(--ease-panel-tab-font-weight, 500);
-      line-height: var(--ease-panel-tab-line-height, 24px);
-      font-family: var(--ease-font-family, "Instrument Sans", sans-serif);
-      color: var(--ease-panel-tab-color, var(--color-gray-600));
-      background: transparent;
+      font-size: var(--ease-panel-tab-font-size);
+      font-weight: var(--ease-panel-tab-font-weight);
+      line-height: 24px;
+      font-family: var(--ease-font-family);
+      color: var(--ease-panel-tab-color);
+      background-color: transparent;
       border: none;
       padding: 4px 8px;
       margin: 0;
       cursor: pointer;
-      border-radius: var(--ease-panel-tab-radius, 6px);
-      transition: color 0.2s, background-color 0.2s;
+      border-radius: var(--ease-panel-tab-radius);
+      transition: color 200ms, background-color 200ms;
+      transition-timing-function: cubic-bezier(.25, 0, .5, 1);
     }
 
     [part="tab"]:hover {
-      color: var(--ease-panel-tab-color-hover, var(--color-blue-100));
+      color: var(--ease-panel-tab-color-hover);
     }
 
     [part="tab"][aria-selected="true"] {
-      color: var(--ease-panel-tab-color-active, var(--color-blue-100));
-      background: var(--ease-panel-tab-background-active, var(--color-white-4));
+      color: var(--ease-panel-tab-color-active);
+      background-color: var(--ease-panel-tab-background-active);
     }
 
     [part="actions"] {
@@ -145,7 +154,7 @@ export interface TabChangeEventDetail {
 
     slot[name="actions"]::slotted(button),
     slot[name="actions"]::slotted(a) {
-      --ease-icon-size: var(--ease-panel-action-icon-size, 16px);
+      --ease-icon-size: var(--ease-panel-action-icon-size);
 
       appearance: none;
       flex: 0 0 24px;
@@ -156,7 +165,8 @@ export interface TabChangeEventDetail {
       margin: 0;
       cursor: pointer;
       color: var(--color-gray-600);
-      transition: color 0.2s;
+      transition: color 200ms;
+      transition-timing-function: cubic-bezier(.25, 0, .5, 1);
       text-decoration: none;
       display: flex;
       align-items: center;
@@ -198,12 +208,37 @@ export interface TabChangeEventDetail {
     }
 
     [part="content"][data-animating="true"] {
-      transition: height var(--ease-panel-transition-duration) var(--ease-panel-transition-easing);
+      transition: height 200ms cubic-bezier(.25, 0, .5, 1);
     }
 
     [part="body"] {
       width: 100%;
       position: relative;
+      overflow-y: auto;
+      mask-image: linear-gradient(to bottom, #0000, #ffff var(--top-fade) calc(100% - var(--bottom-fade)), #0000);
+      animation-name: scroll-fade;
+      animation-timeline: scroll(self y);
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    @keyframes scroll-fade {
+      0% {
+        --top-fade: 0px;
+      }
+      10%, 100% {
+        --top-fade: var(--ease-panel-fade-size);
+      }
+      0%, 90% {
+        --bottom-fade: var(--ease-panel-fade-size);
+      }
+      100% {
+        --bottom-fade: 0px;
+      }
     }
 
     [part="tab-panel"] {
@@ -227,7 +262,7 @@ export interface TabChangeEventDetail {
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      padding: var(--ease-panel-footer-padding, 12px);
+      padding: var(--ease-panel-footer-padding);
       box-sizing: border-box;
       border-top: 1px solid var(--color-white-4);
 
@@ -236,10 +271,9 @@ export interface TabChangeEventDetail {
       }
     }
 
-    ::slotted(:not([slot])),
-    ::slotted([slot^="tab-"]) {
+    [part="items"] {
       display: grid;
-      gap: 12px;
+      grid-gap: var(--ease-panel-gap);
       box-sizing: border-box;
       width: 100%;
     }
@@ -264,6 +298,20 @@ export class Panel extends HTMLElement {
     }
   })
   accessor activeTab: number = 0;
+
+  @Prop<string | null>({
+    reflect: true,
+    attribute: 'headline',
+    defaultValue: ''
+  })
+  accessor headline: string | null = null;
+
+  @Prop<string | null>({
+    reflect: true,
+    attribute: 'max-height',
+    defaultValue: null
+  })
+  accessor maxHeight: string | null = null;
 
   /** @internal */
   handleActiveTabChange(previous: number, next: number): void {
@@ -307,15 +355,15 @@ export class Panel extends HTMLElement {
     return html`
       <section part="section">
         <div part="header">
-          <h3 part="headline"><slot name="headline"></slot></h3>
+          <h3 part="headline">${this.headline}</h3>
           ${this.#renderTabs()}
           <div part="actions">
             <slot name="actions"></slot>
           </div>
         </div>
         <div part="content">
-          <div part="body">
-            ${hasTabs ? this.#renderTabPanels() : html`<slot></slot>`}
+          <div part="body" style=${this.maxHeight ? `max-height: ${this.maxHeight};` : ''}>
+            ${hasTabs ? this.#renderTabPanels() : html`<div part="items"><slot></slot></div>`}
           </div>
         </div>
         <div part="footer">
@@ -363,7 +411,9 @@ export class Panel extends HTMLElement {
             data-state=${index === this.activeTab ? 'active' : 'hidden'}
             data-index=${index}
           >
-            <slot name=${`tab-${tab.id}`}></slot>
+            <div part="items">
+              <slot name=${`tab-${tab.id}`}></slot>
+            </div>
           </div>
         `
       )}

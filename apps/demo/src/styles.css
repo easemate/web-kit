@@ -8,6 +8,7 @@ body {
   margin: 0;
   display: grid;
   place-items: center;
+  padding-bottom: 4dvh;
 }
 
 main {

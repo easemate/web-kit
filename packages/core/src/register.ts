@@ -19,6 +19,7 @@ import './elements/color';
 import './elements/color/picker';
 import './elements/dropdown';
 import './elements/field';
+import './elements/folder';
 import './elements/icons';
 import './elements/input';
 import './elements/logo';

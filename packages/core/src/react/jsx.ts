@@ -162,6 +162,18 @@ export interface CurveElement extends HTMLElement {
   snapToGrid?: boolean;
 }
 
+export interface FolderElement extends HTMLElement {
+  open?: boolean;
+  maxHeight?: string;
+  toggle(): void;
+}
+
+// Folder toggle event detail
+export interface FolderToggleEventDetail {
+  open: boolean;
+  event: Event;
+}
+
 // Props interfaces
 export interface StateProps extends BaseHTMLAttributes {
   ref?: Ref<StateElement>;
@@ -171,7 +183,17 @@ export interface StateProps extends BaseHTMLAttributes {
 export interface PanelProps extends BaseHTMLAttributes {
   ref?: Ref<PanelElement>;
   collapsed?: boolean;
+  'max-height'?: string;
+  maxHeight?: string;
   onTabChange?: CustomEventHandler<TabChangeEventDetail>;
+}
+
+export interface FolderProps extends BaseHTMLAttributes {
+  ref?: Ref<FolderElement>;
+  open?: boolean;
+  'max-height'?: string;
+  maxHeight?: string;
+  onFolderToggle?: CustomEventHandler<FolderToggleEventDetail>;
 }
 
 export interface SliderProps extends BaseHTMLAttributes {
@@ -332,6 +354,7 @@ export interface EaseElements {
   // Layout & State
   'ease-state': StateProps;
   'ease-panel': PanelProps;
+  'ease-folder': FolderProps;
   'ease-field': FieldProps;
   'ease-popover': PopoverProps;
   'ease-tooltip': TooltipProps;
@@ -383,6 +406,7 @@ export interface EaseElements {
   // Icons - Animation
   'ease-icon-chevron': IconProps;
   'ease-icon-clear': IconProps;
+  'ease-icon-folder': IconProps;
   'ease-icon-grid': IconProps;
   'ease-icon-loading': IconProps;
   'ease-icon-snap': IconProps;

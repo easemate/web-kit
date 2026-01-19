@@ -4,6 +4,7 @@ export { ColorInput } from './color';
 export { ColorPicker } from './color/picker';
 export { Dropdown } from './dropdown';
 export { Field } from './field';
+export { Folder, type FolderToggleEventDetail } from './folder';
 export * from './icons';
 export { Input } from './input';
 export * from './logo';

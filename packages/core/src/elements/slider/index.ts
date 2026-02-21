@@ -205,7 +205,6 @@ export class Slider extends HTMLElement {
     const name = this.getAttribute('name') ?? undefined;
     const detail = { name, value: this.value, event };
 
-    dispatchControlEvent(this, 'input', detail);
     dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 
@@ -224,7 +223,6 @@ export class Slider extends HTMLElement {
     const name = this.getAttribute('name') ?? undefined;
     const detail = { name, value: this.value, event };
 
-    dispatchControlEvent(this, 'change', detail);
     dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 

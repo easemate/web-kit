@@ -599,7 +599,7 @@ export class Dropdown extends HTMLElement {
       }
     }
 
-    dispatchControlEvent(this, 'toggle', { value: next, event: origin });
+    dispatchControlEvent(this, 'toggle', { name: this.name ?? undefined, value: next, event: origin });
     requestOutsideClickUpdate(this);
   }
 
@@ -1001,7 +1001,7 @@ export class Dropdown extends HTMLElement {
   }
 
   #dispatchValueChange(value: string, label: string, event: Event): void {
-    dispatchControlEvent(this, 'change', { value, event });
+    dispatchControlEvent(this, 'change', { name: this.name ?? undefined, value, event });
 
     this.dispatchEvent(
       new CustomEvent('value-change', {

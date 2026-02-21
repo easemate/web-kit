@@ -112,7 +112,6 @@ export interface TabChangeEventDetail {
       align-items: center;
       gap: 2px;
       flex-grow: 1;
-      margin: 0 0 0 4px;
     }
 
     [part="tabs"]:empty {
@@ -121,17 +120,18 @@ export interface TabChangeEventDetail {
 
     [part="tab"] {
       appearance: none;
+      border-radius: var(--ease-panel-tab-radius, var(--radii-md));
+      background-color: var(--ease-panel-tab-background, transparent);
+      box-sizing: border-box;
+      padding: var(--ease-panel-tab-padding, 4px 8px);
       font-size: var(--ease-panel-tab-font-size);
       font-weight: var(--ease-panel-tab-font-weight);
       line-height: 24px;
       font-family: var(--ease-font-family);
       color: var(--ease-panel-tab-color);
-      background-color: transparent;
       border: none;
-      padding: 4px 8px;
       margin: 0;
       cursor: pointer;
-      border-radius: var(--ease-panel-tab-radius);
       transition: color 200ms, background-color 200ms;
       transition-timing-function: cubic-bezier(.25, 0, .5, 1);
     }

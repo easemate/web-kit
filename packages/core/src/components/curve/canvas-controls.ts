@@ -10,6 +10,7 @@ import { Prop } from '~/decorators/Prop';
 import { type ControlEventDetail, dispatchControlEvent } from '~/elements/shared';
 
 type CurveHost = HTMLElement & {
+  name?: string;
   easingType: EasingType;
   points: CubicBezierPoints | LinearPoints;
   focusedLinearIndex: number | null;
@@ -123,7 +124,7 @@ export class CanvasControls extends HTMLElement {
 
   #notifyHost = <TValue>(type: HostEventType, value: TValue, event: Event): void => {
     const target = this.#getEventTarget();
-    const detail: ControlEventDetail<TValue> = { value, event };
+    const detail: ControlEventDetail<TValue> = { name: target.name, value, event };
     dispatchControlEvent(target, type, detail);
   };
 

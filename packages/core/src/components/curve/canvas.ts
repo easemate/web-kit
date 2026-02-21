@@ -40,6 +40,7 @@ import { Query } from '~/decorators/Query';
 import { type ControlEventDetail, dispatchControlEvent } from '~/elements/shared';
 
 type CurveHost = HTMLElement & {
+  name?: string;
   points: CubicBezierPoints | LinearPoints;
   handlePointsChange?: (event: CustomEvent<ControlEventDetail<CubicBezierPoints | LinearPoints>>) => void;
 };
@@ -693,7 +694,7 @@ export class CurveCanvas extends HTMLElement {
 
   #emitPoints = (value: CubicBezierPoints | LinearPoints, event: Event): void => {
     const target = this.#getEventTarget();
-    const detail: ControlEventDetail<CubicBezierPoints | LinearPoints> = { value, event };
+    const detail: ControlEventDetail<CubicBezierPoints | LinearPoints> = { name: target.name, value, event };
 
     dispatchControlEvent(target, 'points-change', detail);
   };
@@ -703,7 +704,7 @@ export class CurveCanvas extends HTMLElement {
       return;
     }
     const target = this.#getEventTarget();
-    const detail: ControlEventDetail<number | null> = { value: index, event };
+    const detail: ControlEventDetail<number | null> = { name: target.name, value: index, event };
     dispatchControlEvent(target, 'linear-point-focus', detail);
   };
 

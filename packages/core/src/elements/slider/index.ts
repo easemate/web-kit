@@ -2,7 +2,13 @@ import '../input';
 
 import { html } from 'lit-html';
 
-import { type ControlEventDetail, coerceNumber, dispatchControlEvent, setBooleanAttribute } from '../shared';
+import {
+  CONTROL_CHANGE_EVENT,
+  type ControlEventDetail,
+  coerceNumber,
+  dispatchControlEvent,
+  setBooleanAttribute
+} from '../shared';
 
 import { Component } from '~/decorators/Component';
 import { Listen } from '~/decorators/Listen';
@@ -120,11 +126,15 @@ import { Query } from '~/decorators/Query';
           .step=${this.step ?? 1}
           .value=${String(this.value ?? 0)}
           ?disabled=${this.disabled}
+          @input=${this.handleRangeInput}
+          @change=${this.handleRangeChange}
           ?aria-disabled=${this.disabled}
         />
         
         <ease-input
           part="value"
+          @input=${this.handleValueInput}
+          @change=${this.handleValueChange}
           type="number"
           placeholder="-"
           .disabled=${Boolean(this.disabled)}
@@ -192,7 +202,11 @@ export class Slider extends HTMLElement {
       this.valueControl.value = numericValue === null ? '' : String(numericValue);
     }
 
-    dispatchControlEvent(this, 'input', { value: this.value, event });
+    const name = this.getAttribute('name') ?? undefined;
+    const detail = { name, value: this.value, event };
+
+    dispatchControlEvent(this, 'input', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 
   @Listen<Slider, Event, HTMLInputElement>('change', { selector: 'input[type="range"]' })
@@ -207,7 +221,11 @@ export class Slider extends HTMLElement {
       }
     }
 
-    dispatchControlEvent(this, 'change', { value: this.value, event });
+    const name = this.getAttribute('name') ?? undefined;
+    const detail = { name, value: this.value, event };
+
+    dispatchControlEvent(this, 'change', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 
   @Listen<Slider, CustomEvent<ControlEventDetail<string>>, HTMLElement>('input', {
@@ -224,7 +242,12 @@ export class Slider extends HTMLElement {
       this.control.value = String(numericValue ?? 0);
     }
 
-    dispatchControlEvent(this, 'input', { value: this.value, event: event.detail?.event ?? event });
+    const name = this.getAttribute('name') ?? undefined;
+    const controlEvent = event.detail?.event ?? event;
+    const detail = { name, value: this.value, event: controlEvent };
+
+    dispatchControlEvent(this, 'input', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 
   @Listen<Slider, CustomEvent<ControlEventDetail<string>>, HTMLElement>('change', {
@@ -241,7 +264,12 @@ export class Slider extends HTMLElement {
       this.control.value = String(numericValue ?? 0);
     }
 
-    dispatchControlEvent(this, 'change', { value: this.value, event: event.detail?.event ?? event });
+    const name = this.getAttribute('name') ?? undefined;
+    const controlEvent = event.detail?.event ?? event;
+    const detail = { name, value: this.value, event: controlEvent };
+
+    dispatchControlEvent(this, 'change', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 
   updateProgress(): void {

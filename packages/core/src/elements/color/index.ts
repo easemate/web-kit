@@ -96,6 +96,9 @@ export class ColorInput extends HTMLElement {
   @Prop<boolean>({ type: Boolean, reflect: true })
   accessor disabled = false;
 
+  @Prop<string | null>({ reflect: true, defaultValue: null })
+  accessor name: string | null = null;
+
   @Prop<Placement>({ reflect: true, defaultValue: 'bottom-start' })
   accessor placement: Placement = 'bottom-start';
 
@@ -140,17 +143,17 @@ export class ColorInput extends HTMLElement {
 
   #handleInputChange = (event: Event): void => {
     this.value = (event.target as HTMLInputElement).value;
-    dispatchControlEvent(this, 'input', { value: this.value, event });
+    dispatchControlEvent(this, 'input', { name: this.name ?? undefined, value: this.value, event });
   };
 
   #handlePickerInput = (event: CustomEvent<{ value: string }>): void => {
     this.value = event.detail.value;
-    dispatchControlEvent(this, 'input', { value: this.value, event });
+    dispatchControlEvent(this, 'input', { name: this.name ?? undefined, value: this.value, event });
   };
 
   #handlePickerChange = (event: CustomEvent<{ value: string }>): void => {
     this.value = event.detail.value;
-    dispatchControlEvent(this, 'change', { value: this.value, event });
+    dispatchControlEvent(this, 'change', { name: this.name ?? undefined, value: this.value, event });
   };
 
   #handlePickerCancel = (event: CustomEvent<{ value: string }>): void => {
@@ -163,7 +166,7 @@ export class ColorInput extends HTMLElement {
 
   #handlePickerApply = (event: CustomEvent<{ value: string }>): void => {
     this.value = event.detail.value;
-    dispatchControlEvent(this, 'change', { value: this.value, event });
+    dispatchControlEvent(this, 'change', { name: this.name ?? undefined, value: this.value, event });
     if (this.dropdown) {
       this.dropdown.open = false;
     }

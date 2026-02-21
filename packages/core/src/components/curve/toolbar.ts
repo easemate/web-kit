@@ -21,6 +21,7 @@ import '~/elements/button';
 import '~/elements/tooltip';
 
 type CurveHost = HTMLElement & {
+  name?: string;
   easingType: EasingType;
   points: CubicBezierPoints | LinearPoints;
   showGrid: boolean;
@@ -218,7 +219,7 @@ export class CurveToolbar extends HTMLElement {
 
   #notifyHost = <TValue>(type: HostEventType, value: TValue, event: Event): void => {
     const target = this.#getEventTarget();
-    const detail: ControlEventDetail<TValue> = { value, event };
+    const detail: ControlEventDetail<TValue> = { name: target.name, value, event };
     dispatchControlEvent(target, type, detail);
   };
 

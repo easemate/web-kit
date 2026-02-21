@@ -1,6 +1,6 @@
 import { html } from 'lit-html';
 
-import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+import { CONTROL_CHANGE_EVENT, dispatchControlEvent, setBooleanAttribute } from '../shared';
 
 import { Component } from '~/decorators/Component';
 import { Listen } from '~/decorators/Listen';
@@ -155,6 +155,11 @@ export class Toggle extends HTMLElement {
 
     this.checked = !this.checked;
 
-    dispatchControlEvent(this, 'toggle', { value: this.checked, event });
+    const name = this.getAttribute('name') ?? undefined;
+    const detail = { name, value: this.checked, event };
+
+    dispatchControlEvent(this, 'toggle', detail);
+    dispatchControlEvent(this, 'change', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 }

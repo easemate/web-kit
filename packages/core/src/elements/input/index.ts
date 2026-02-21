@@ -1,6 +1,6 @@
 import { html } from 'lit-html';
 
-import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+import { CONTROL_CHANGE_EVENT, dispatchControlEvent, setBooleanAttribute } from '../shared';
 
 import { Component } from '~/decorators/Component';
 import { Listen } from '~/decorators/Listen';
@@ -281,7 +281,12 @@ export class Input extends HTMLElement {
     }
 
     this.value = target.value;
-    dispatchControlEvent(this, 'input', { value: this.value ?? '', event });
+
+    const name = this.name ?? this.getAttribute('name') ?? undefined;
+    const detail = { name, value: this.value ?? '', event };
+
+    dispatchControlEvent(this, 'input', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 
   @Listen<Input, Event, HTMLInputElement>('change', { selector: 'input' })
@@ -291,6 +296,11 @@ export class Input extends HTMLElement {
     }
 
     this.value = target.value;
-    dispatchControlEvent(this, 'change', { value: this.value ?? '', event });
+
+    const name = this.name ?? this.getAttribute('name') ?? undefined;
+    const detail = { name, value: this.value ?? '', event };
+
+    dispatchControlEvent(this, 'change', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 }

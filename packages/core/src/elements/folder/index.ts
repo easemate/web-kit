@@ -133,7 +133,7 @@ export interface FolderToggleEventDetail {
     [part="content"] {
       height: 0;
       overflow: hidden;
-      transition: height 200ms cubic-bezier(.25, 0, .5, 1);
+      transition: height 200ms cubic-bezier(.25, 0, .5, 1) !important;
     }
 
     :host([open]) [part="content"] {

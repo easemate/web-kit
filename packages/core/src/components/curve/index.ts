@@ -1,5 +1,3 @@
-import type { ControlEventDetail } from '~/elements/shared';
-
 import { html } from 'lit-html';
 
 import { cubicBezierToLinearPoints } from './bezier-conversion';
@@ -10,6 +8,7 @@ import { MIN_LINEAR_DELTA, normalizeLinearPoints } from './utils';
 import { Component } from '~/decorators/Component';
 import { Listen } from '~/decorators/Listen';
 import { Prop } from '~/decorators/Prop';
+import { type ControlEventDetail, dispatchControlEvent } from '~/elements/shared';
 
 @Component({
   tag: 'ease-curve',
@@ -363,17 +362,12 @@ export class Curve extends HTMLElement {
 
   private emitPointsChange(value: CubicBezierPoints | LinearPoints, sourceEvent?: Event): void {
     const detail: ControlEventDetail<CubicBezierPoints | LinearPoints> = {
+      name: this.name,
       value,
       event: sourceEvent ?? new Event('points-change')
     };
 
-    this.dispatchEvent(
-      new CustomEvent('points-change', {
-        detail,
-        bubbles: true,
-        composed: true
-      })
-    );
+    dispatchControlEvent(this, 'points-change', detail);
   }
 }
 

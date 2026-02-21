@@ -1,6 +1,6 @@
 import { html } from 'lit-html';
 
-import { dispatchControlEvent, setBooleanAttribute } from '../shared';
+import { CONTROL_CHANGE_EVENT, dispatchControlEvent, setBooleanAttribute } from '../shared';
 
 import { Component } from '~/decorators/Component';
 import { Listen } from '~/decorators/Listen';
@@ -346,6 +346,12 @@ export class RadioInput extends HTMLElement {
 
     this.checked = true;
 
-    dispatchControlEvent(this, 'radio', { value: this.checked, event });
+    const groupName = this.closest('ease-radio-group')?.getAttribute('name') ?? undefined;
+    const name = this.getAttribute('name') ?? groupName ?? undefined;
+    const detail = { name, value: this.checked, event };
+
+    dispatchControlEvent(this, 'radio', detail);
+    dispatchControlEvent(this, 'change', detail);
+    dispatchControlEvent(this, CONTROL_CHANGE_EVENT, detail);
   }
 }

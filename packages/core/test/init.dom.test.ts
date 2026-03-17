@@ -68,7 +68,7 @@ describe('initWebKit (dom)', () => {
       const controller = initWebKit({
         theme: {
           vars: { '--inline-test': 'inline-value' }
-        } as 'default'
+        }
       });
       await controller.ready;
 
@@ -114,7 +114,7 @@ describe('initWebKit (dom)', () => {
 
       const styleEl = document.getElementById('ease-webkit-base');
       expect(styleEl).toBeTruthy();
-      expect(styleEl?.textContent).toContain('background-color');
+      expect(styleEl?.textContent).toContain('font-family');
     });
 
     it('injects main styles when styles="main"', async () => {

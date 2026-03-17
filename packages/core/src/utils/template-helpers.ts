@@ -8,7 +8,7 @@ import { styleMap } from 'lit-html/directives/style-map.js';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import { when } from 'lit-html/directives/when.js';
 
-export { classMap, styleMap, when, repeat, unsafeHTML, ifDefined };
+export { classMap, ifDefined, repeat, styleMap, unsafeHTML, when };
 
 export function renderIf<T>(
   condition: T | undefined | null,

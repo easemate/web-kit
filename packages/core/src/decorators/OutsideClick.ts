@@ -117,5 +117,6 @@ export function OutsideClick<THost extends OutsideClickHost, TEvent extends Even
   };
 }
 
-export { requestOutsideClickUpdate } from '~/utils/outside-click';
 export type { OutsideClickOptions };
+
+export { requestOutsideClickUpdate } from '~/utils/outside-click';

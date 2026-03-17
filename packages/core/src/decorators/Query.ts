@@ -37,11 +37,12 @@ type QueryReturnType<
   TElement extends Element,
   THost extends QueryHost,
   TOptions extends QueryOptions<TElement, THost>
-> = TOptions extends QueryAllOptions<TElement, THost>
-  ? TElement[]
-  : TOptions extends QueryClosestOptions<THost>
-    ? Element | null
-    : TElement | null;
+> =
+  TOptions extends QueryAllOptions<TElement, THost>
+    ? TElement[]
+    : TOptions extends QueryClosestOptions<THost>
+      ? Element | null
+      : TElement | null;
 
 type QueryDecorator<
   TElement extends Element,

@@ -1,6 +1,6 @@
 {
   "name": "@easemate/web-kit",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "UI kit of web components for easemate - a typescript animation library",
   "type": "module",
   "files": [
@@ -25,8 +25,8 @@
     "typescript",
     "animation",
     "controls",
-    "leva",
-    "lil-gui"
+    "kit",
+    "easemate"
   ],
   "author": "Aaron Iker",
   "license": "MIT",
@@ -37,7 +37,7 @@
   "bugs": {
     "url": "https://github.com/easemate/web-kit/issues"
   },
-  "homepage": "https://github.com/easemate/web-kit#readme",
+  "homepage": "https://ease.dev",
   "engines": {
     "node": ">=20"
   },

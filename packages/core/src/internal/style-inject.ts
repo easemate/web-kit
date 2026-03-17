@@ -192,18 +192,12 @@ export const RESET_CSS = `
  * Base body/html styles for dark theme.
  */
 export const BASE_CSS = `
-html,
-body {
-  background-color: var(--color-gray-900);
-}
-
-body {
+ease-panel {
   font-family: var(--ease-font-family, 'Instrument Sans', sans-serif);
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
   font-variation-settings: 'wdth' 100;
-  min-height: 100dvh;
   color: var(--color-gray-600);
 }
 `.trim();

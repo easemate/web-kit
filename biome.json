@@ -56,15 +56,6 @@
       "style": {
         "useBlockStatements": "error",
         "useConsistentCurlyBraces": "warn"
-      },
-      "nursery": {
-        "useConsistentArrowReturn": {
-          "level": "warn",
-          "options": {
-            "style": "asNeeded",
-            "requireForObjectLiteral": true
-          }
-        }
       }
     }
   },

@@ -153,11 +153,11 @@ const nextPanelId = (() => {
         --ease-dropdown-panel-shadow,
         0 5px 20px 0 var(--color-black-15),
         0 1px 4px 0 var(--color-black-15),
-        0 0 0 1px var(--color-white-4) inset,
+        0 0 0 .5px var(--color-white-4) inset,
         0 1px 0 0 var(--color-white-4) inset
       );
       background-clip: padding-box;
-      border: 1px solid var(--ease-dropdown-panel-border-color, var(--color-gray-825));
+      border: .25px solid var(--ease-dropdown-panel-border-color, var(--color-gray-825));
       box-sizing: border-box;
       padding: var(--ease-dropdown-panel-padding, 4px);
     }
@@ -175,7 +175,7 @@ const nextPanelId = (() => {
     }
 
     [part="content"] ::slotted(h4) {
-      margin: 4px 0 8px 0 !important;
+      margin: 4px 0 !important;
       font-size: var(--ease-dropdown-group-label-font-size, 11px);
       line-height: 1;
       padding: var(--ease-dropdown-group-label-padding, 0 8px);

@@ -212,7 +212,17 @@ export interface TabChangeEventDetail {
       min-height: 0;
       width: 100%;
       box-sizing: border-box;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
+      mask-image: linear-gradient(to bottom, #0000, #ffff var(--top-fade) calc(100% - var(--bottom-fade)), #0000);
+      animation-name: scroll-fade;
+      animation-timeline: scroll(self y);
+      scroll-snap-type: y proximity;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     [part="content"][data-animating="true"] {
@@ -278,16 +288,6 @@ export interface TabChangeEventDetail {
       box-sizing: border-box;
       width: 100%;
       max-height: 100%;
-      overflow-y: auto;
-      mask-image: linear-gradient(to bottom, #0000, #ffff var(--top-fade) calc(100% - var(--bottom-fade)), #0000);
-      animation-name: scroll-fade;
-      animation-timeline: scroll(self y);
-      scroll-snap-type: y mandatory;
-      scrollbar-width: none;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
     }
   `
 })

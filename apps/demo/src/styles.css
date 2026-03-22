@@ -26,7 +26,6 @@ main {
   align-items: center;
   gap: 24px;
   padding: 32px;
-  background: var(--color-gray-900);
   border-radius: var(--radii-lg);
   margin-bottom: 24px;
 }
@@ -64,7 +63,6 @@ main {
 /* Standalone State Demo */
 .standalone-demo {
   grid-column: 1 / -1;
-  background: var(--color-gray-900);
   border-radius: var(--radii-lg);
 }
 

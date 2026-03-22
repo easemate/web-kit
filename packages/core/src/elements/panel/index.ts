@@ -51,13 +51,13 @@ export interface TabChangeEventDetail {
   tag: 'ease-panel',
   shadowMode: 'open',
   styles: `
-    @property --top-fade {
+    @property --ease-panel-top-fade {
       syntax: "<length>";
       inherits: false;
       initial-value: 0px;
     }
 
-    @property --bottom-fade {
+    @property --ease-panel-bottom-fade {
       syntax: "<length>";
       inherits: false;
       initial-value: 0px;
@@ -220,6 +220,7 @@ export interface TabChangeEventDetail {
       animation-timeline: scroll(self y);
       scroll-snap-type: y mandatory;
       scrollbar-width: none;
+      max-height: calc(100dvh - 32px - var(--ease-panel-padding));
 
       &::-webkit-scrollbar {
         display: none;

@@ -39,7 +39,6 @@ export interface FolderToggleEventDetail {
  */
 @Component({
   tag: 'ease-folder',
-  shadowMode: 'open',
   styles: `
     @property --top-fade {
       syntax: "<length>";
@@ -196,8 +195,8 @@ export class Folder extends HTMLElement {
             <ease-icon-chevron state=${this.open ? 'up' : 'down'}></ease-icon-chevron>
           </span>
         </div>
-        <div part="content" style=${this.maxHeight ? `max-height: ${this.maxHeight}` : ''}>
-          <div part="body">
+        <div part="content">
+          <div part="body" style=${this.maxHeight ? `max-height: ${this.maxHeight}` : ''}>
             <slot></slot>
           </div>
         </div>

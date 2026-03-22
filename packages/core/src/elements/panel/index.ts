@@ -51,6 +51,11 @@ export interface TabChangeEventDetail {
   tag: 'ease-panel',
   shadowMode: 'open',
   styles: `
+    :host {
+      display: block;
+      box-sizing: border-box;
+    }
+
     @property --ease-panel-top-fade {
       syntax: "<length>";
       inherits: false;
@@ -64,7 +69,9 @@ export interface TabChangeEventDetail {
     }
 
     [part="section"] {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      max-height: inherit;
       width: 100%;
       max-width: var(--ease-panel-max-width);
       border-radius: var(--ease-panel-radius);
@@ -201,9 +208,10 @@ export interface TabChangeEventDetail {
 
     [part="content"] {
       display: block;
+      flex: 1 1 auto;
+      min-height: 0;
       width: 100%;
       box-sizing: border-box;
-      margin: auto;
       overflow: hidden;
     }
 
@@ -212,19 +220,10 @@ export interface TabChangeEventDetail {
     }
 
     [part="body"] {
+      display: block;
+      height: 100%;
       width: 100%;
       position: relative;
-      overflow-y: auto;
-      mask-image: linear-gradient(to bottom, #0000, #ffff var(--top-fade) calc(100% - var(--bottom-fade)), #0000);
-      animation-name: scroll-fade;
-      animation-timeline: scroll(self y);
-      scroll-snap-type: y mandatory;
-      scrollbar-width: none;
-      max-height: calc(100dvh - 32px - var(--ease-panel-padding));
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
     }
 
     @keyframes scroll-fade {
@@ -250,6 +249,7 @@ export interface TabChangeEventDetail {
 
     [part="tab-panel"][data-state="active"] {
       display: block;
+      height: 100%;
       pointer-events: auto;
     }
 
@@ -277,6 +277,17 @@ export interface TabChangeEventDetail {
       grid-gap: var(--ease-panel-gap);
       box-sizing: border-box;
       width: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+      mask-image: linear-gradient(to bottom, #0000, #ffff var(--top-fade) calc(100% - var(--bottom-fade)), #0000);
+      animation-name: scroll-fade;
+      animation-timeline: scroll(self y);
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
   `
 })
@@ -363,8 +374,8 @@ export class Panel extends HTMLElement {
           </div>
         </div>
         <div part="content">
-          <div part="body" style=${this.maxHeight ? `max-height: ${this.maxHeight};` : ''}>
-            ${hasTabs ? this.#renderTabPanels() : html`<div part="items"><slot></slot></div>`}
+          <div part="body">
+            ${hasTabs ? this.#renderTabPanels() : html`<div part="items" style=${this.maxHeight ? `max-height: ${this.maxHeight}` : nothing}><slot></slot></div>`}
           </div>
         </div>
         <div part="footer">
@@ -412,7 +423,7 @@ export class Panel extends HTMLElement {
             data-state=${index === this.activeTab ? 'active' : 'hidden'}
             data-index=${index}
           >
-            <div part="items">
+            <div part="items" style=${this.maxHeight ? `max-height: ${this.maxHeight}` : nothing}>
               <slot name=${`tab-${tab.id}`}></slot>
             </div>
           </div>
@@ -522,16 +533,21 @@ export class Panel extends HTMLElement {
 
     fromPanel.setAttribute('data-state', 'hidden');
 
-    // Prepare and measure new panel while completely invisible
+    // Temporarily unlock content height for accurate measurement
+    content.style.height = 'auto';
+
     const previousToState = toPanel.getAttribute('data-state');
 
     toPanel.style.display = 'block';
     toPanel.style.visibility = 'hidden';
     toPanel.style.opacity = '0';
 
-    // Force layout, then measure
-    void toPanel.offsetHeight;
-    const endHeight = toPanel.getBoundingClientRect().height;
+    void content.offsetHeight;
+    const endHeight = content.getBoundingClientRect().height;
+
+    // Re-lock at start height for animation
+    content.style.height = `${startHeight}px`;
+    void content.offsetHeight;
 
     // Animate height
     if (startHeight !== endHeight) {

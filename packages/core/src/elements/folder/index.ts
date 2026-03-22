@@ -71,6 +71,7 @@ export interface FolderToggleEventDetail {
     :host {
       display: block;
       width: 100%;
+      interpolate-size: allow-keywords;
     }
 
     [part="section"] {
@@ -144,7 +145,7 @@ export interface FolderToggleEventDetail {
       grid-gap: var(--ease-folder-gap);
       padding: var(--ease-folder-padding);
       overflow-y: auto;
-      overscroll-behavior: contain;
+      overscroll-behavior: none;
       mask-image: linear-gradient(to bottom, #0000, #ffff var(--top-fade) calc(100% - var(--bottom-fade)), #0000);
       animation-name: scroll-fade;
       animation-timeline: scroll(self y);
